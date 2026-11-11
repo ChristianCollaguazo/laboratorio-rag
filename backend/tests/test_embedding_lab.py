@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 
-from app.embedding_lab import build_embedding_lab_result, cosine_distance
+from app.features.learning.embedding_math import build_embedding_lab_result, cosine_distance
 from app.main import app
 
 
@@ -32,9 +32,9 @@ def test_embedding_lab_api_uses_backend_provider_and_returns_real_contract(monke
                 {"prompt_tokens": 4, "total_tokens": 4},
             )
 
-        monkeypatch.setattr(app.state.providers, "openai_embedding_batch", fake_batch)
+        monkeypatch.setattr(app.state.container.providers, "openai_embedding_batch", fake_batch)
         response = client.post(
-            "/api/learning/embeddings",
+            "/api/v1/learning/embeddings",
             json={
                 "query": "automóvil",
                 "candidates": ["coche", "banana", "vehículo"],

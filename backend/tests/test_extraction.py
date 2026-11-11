@@ -4,7 +4,7 @@ import pytest
 from reportlab.pdfgen.canvas import Canvas
 from pypdf import PdfWriter
 
-from app.extraction import ExtractionError, extract_pdf, extract_txt
+from app.features.documents.extractors import ExtractionError, extract_pdf, extract_txt
 
 
 def test_txt_requires_utf8_and_content():

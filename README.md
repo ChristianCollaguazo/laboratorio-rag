@@ -16,6 +16,8 @@ Una aplicación para observar y aprender un flujo RAG completo sin esconderlo de
 
 ## Arquitectura
 
+El repositorio utiliza un **monolito modular por funcionalidades**. En el backend, cada módulo contiene su router HTTP, esquemas de frontera y servicio de aplicación; SQLite, Chroma y los proveedores son adaptadores de infraestructura. En el frontend, las rutas son composición y cada funcionalidad conserva sus componentes, estado y llamadas de API. Los identificadores del código están en inglés y el contenido educativo permanece en español.
+
 ```mermaid
 flowchart LR
     UI[React / Vite] -->|HTTP local| API[FastAPI]
@@ -38,6 +40,49 @@ flowchart LR
 ```
 
 `data/rag.sqlite3` contiene el catálogo visible y `data/chroma/` los vectores. Ambos están ignorados por Git.
+
+```text
+backend/app/
+├── main.py                 # Fábrica y configuración de FastAPI
+├── api/router.py           # Composición de rutas /api/v1
+├── core/                   # Configuración, contenedor y errores comunes
+├── features/
+│   ├── status/             # Disponibilidad de proveedores y almacenamiento
+│   ├── documents/          # Ingesta, extracción y fragmentación
+│   ├── indexing/           # Huellas, manifiestos e indexación en Chroma
+│   ├── query/              # Recuperación, contexto, generación y citas
+│   └── learning/           # Laboratorio educativo de embeddings
+├── providers/              # Puertos y adaptadores de OpenAI y Ollama
+└── infrastructure/
+    ├── sqlite/             # Catálogo de documentos, chunks e índices
+    └── chroma/             # Persistencia y búsqueda vectorial
+
+frontend/src/
+├── app/                    # Aplicación, providers y router
+├── routes/                 # Composición de páginas, sin lógica de negocio
+├── features/
+│   ├── provider-config/    # Selección independiente de proveedores
+│   ├── documents/          # Entrada, archivos y fragmentación
+│   ├── indexing/           # Creación y selección de índices
+│   ├── retrieval/          # Consulta y resultados recuperados
+│   ├── generation/         # Payload al LLM, respuesta y citas
+│   ├── library/            # Administración de documentos e índices
+│   ├── laboratory/         # Estado preservado del flujo completo
+│   └── learning/           # Presentación y diapositivas educativas
+└── shared/                 # Cliente HTTP, contratos, estilos y UI reutilizable
+```
+
+Dentro de una funcionalidad del backend, `router.py` adapta HTTP, `schemas.py`
+define los contratos Pydantic, `models.py` contiene modelos internos tipados y
+`service.py` ejecuta los casos de uso. Los routers no acceden directamente a
+SQLite, Chroma ni a los SDK de los proveedores.
+
+En el frontend, cada funcionalidad es propietaria de sus componentes, hooks,
+tipos y estilos. `shared/` contiene únicamente piezas reutilizables y el cliente
+HTTP; el estado remoto pertenece a TanStack Query y el progreso temporal del
+laboratorio al contexto con reducer.
+
+FastAPI expone exclusivamente la versión `/api/v1`. Los routers son controladores delgados; la lógica vive en servicios tipados. React Router usa las URLs `/laboratorio` y `/aprender`, TanStack Query administra el estado remoto y un contexto con reducer conserva el trabajo del laboratorio entre ambas vistas.
 
 ## Requisitos
 
@@ -124,9 +169,11 @@ cd frontend
 npm run dev
 ```
 
-Abre [http://localhost:5173](http://localhost:5173). La documentación interactiva de la API queda en [http://localhost:8000/docs](http://localhost:8000/docs).
+Abre [http://localhost:5173/laboratorio](http://localhost:5173/laboratorio). La documentación interactiva de la API queda en [http://localhost:8000/docs](http://localhost:8000/docs).
 
 Vite reenvía las rutas `/api` a `http://localhost:8000`. Si cambias los puertos, actualiza `frontend/vite.config.ts` y `FRONTEND_ORIGIN` según corresponda.
+
+En un despliegue de producción, configura el servidor web para devolver `index.html` al solicitar `/laboratorio`, `/aprender` o cualquier ruta de la SPA que no corresponda a un archivo estático.
 
 ## Configuración
 
@@ -205,7 +252,7 @@ Para una primera comprobación utiliza `examples/ecuador.txt` y pregunta **“¿
 
 ## Presentación “Aprender RAG”
 
-El botón **Aprender RAG** abre `#aprender`, una vista didáctica separada del laboratorio. Explica documento, chunks, embeddings, comparación de vectores, recuperación del texto por ID, Chroma, recuperación, contexto, system prompt, generación token por token, validación de citas y evaluación del sistema mediante un mismo caso técnico.
+El botón **Aprender RAG** abre `/aprender`, una vista didáctica separada del laboratorio. Explica documento, chunks, embeddings, comparación de vectores, recuperación del texto por ID, Chroma, recuperación, contexto, system prompt, generación token por token, validación de citas y evaluación del sistema mediante un mismo caso técnico.
 
 La presentación incluye un artículo completo editable para observar cómo cualquier cambio vuelve a dividir el texto, controles locales para comparar tamaños y solapamientos de chunks y una simulación de cómo `top_k` modifica las fuentes del contexto. Todo funciona localmente y sin credenciales salvo la diapositiva **Laboratorio**, que llama a OpenAI únicamente después de pulsar **Generar embeddings reales**. FastAPI envía las palabras, calcula las distancias y devuelve el texto asociado al ID del vecino más cercano; la API key nunca llega al navegador. El laboratorio no guarda datos en Chroma ni modifica documentos o índices persistidos. Usa **Anterior/Siguiente**, el índice lateral o las teclas `←`, `→`, `Home` y `End`; **Volver al laboratorio** conserva el estado de trabajo actual.
 
@@ -276,20 +323,20 @@ Las pruebas reales de OpenAI solo deben considerarse ejecutadas si `OPENAI_API_K
 
 ## API principal
 
-- `GET /api/status`
-- `GET /api/documents`, `POST /api/documents/text`, `POST /api/documents/upload`
-- `POST /api/documents/{id}/chunks`
-- `GET|POST /api/indices`
-- `POST /api/retrieve`
-- `POST /api/chat`
-- `POST /api/learning/embeddings`
-- `DELETE /api/documents/{id}`, `DELETE /api/indices/{id}`
+- `GET /api/v1/status`
+- `GET /api/v1/documents`, `POST /api/v1/documents/text`, `POST /api/v1/documents/upload`
+- `POST /api/v1/documents/{id}/chunks`
+- `GET|POST /api/v1/indices`
+- `POST /api/v1/retrieve`
+- `POST /api/v1/chat`
+- `POST /api/v1/learning/embeddings`
+- `DELETE /api/v1/documents/{id}`, `DELETE /api/v1/indices/{id}`
 
 Los esquemas completos se pueden inspeccionar en `/docs`.
 
 ## Problemas frecuentes
 
-- **El frontend abre pero muestra errores de API:** confirma que FastAPI esté escuchando en el puerto 8000 y revisa [http://localhost:8000/api/status](http://localhost:8000/api/status).
+- **El frontend abre pero muestra errores de API:** confirma que FastAPI esté escuchando en el puerto 8000 y revisa [http://localhost:8000/api/v1/status](http://localhost:8000/api/v1/status).
 - **OpenAI aparece como no disponible:** verifica que `.env` esté en la raíz, que `OPENAI_API_KEY` tenga valor y reinicia el backend. La disponibilidad del modelo también depende de tu proyecto de API.
 - **Ollama aparece desconectado:** ejecuta `ollama serve`, comprueba `http://localhost:11434/api/tags` y descarga exactamente el modelo configurado.
 - **La consulta responde HTTP 409:** el proveedor, modelo o dimensión de embeddings no coincide con el índice. Selecciona el índice correcto o vuelve a vectorizar; cambiar solo el generador no exige reindexar.

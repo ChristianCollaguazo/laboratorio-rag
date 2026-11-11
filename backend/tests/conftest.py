@@ -5,9 +5,13 @@ from langchain_core.embeddings import Embeddings
 from langchain_core.language_models import SimpleChatModel
 from pydantic import PrivateAttr
 
-from app.config import Settings
-from app.database import Catalog
-from app.rag import RagService
+from app.core.config import Settings
+from app.features.documents.service import DocumentService
+from app.features.indexing.service import IndexingService
+from app.features.query.service import QueryService
+from app.infrastructure.chroma.vector_store import ChromaVectorStore
+from app.infrastructure.sqlite.catalog import Catalog
+from app.infrastructure.sqlite.repositories import DocumentRepository, IndexRepository
 
 
 class FakeEmbeddings(Embeddings):
@@ -47,14 +51,27 @@ class FakeProviders:
     def __init__(self):
         self.chat_model = FakeChat()
 
-    def embeddings(self, config):
+    def embeddings(self, _config):
         return FakeEmbeddings()
 
-    def chat(self, config):
+    def chat(self, _config):
         return self.chat_model
 
 
 @pytest.fixture
-def service(tmp_path):
+def services(tmp_path):
     settings = Settings(rag_data_dir=tmp_path, openai_api_key=None)
-    return RagService(settings, Catalog(settings.sqlite_path), FakeProviders())
+    catalog = Catalog(settings.sqlite_path)
+    providers = FakeProviders()
+    documents = DocumentService(DocumentRepository(catalog), catalog)
+    vector_store = ChromaVectorStore(settings.chroma_path)
+    indexing = IndexingService(documents, IndexRepository(catalog), vector_store, providers, catalog)
+    query = QueryService(indexing, vector_store, providers)
+    return {
+        "catalog": catalog,
+        "providers": providers,
+        "documents": documents,
+        "indexing": indexing,
+        "query": query,
+        "vector_store": vector_store,
+    }
