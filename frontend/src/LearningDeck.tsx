@@ -151,6 +151,28 @@ function EmbeddingGraphic() {
     <div className="model-box"><span>modelo de embeddings</span><strong>texto → coordenadas</strong><small>misma entrada = misma dimensión</small></div>
     <div className="vector-output" aria-label="Ejemplo de vector"><span>[</span>{[0.031, -0.12, 0.84, 0.07, -0.22, 0.41].map(value => <code key={value}>{value}</code>)}<span>…]</span><small>Vista abreviada · en esta POC el vector OpenAI tiene 1536 dimensiones</small></div>
     <div className="model-comparison"><div><strong>Embedding</strong><span>Representa significado</span></div><div><strong>Generador</strong><span>Redacta la respuesta</span></div></div>
+    <section className="embedding-definition" aria-label="Qué es un modelo de embeddings">
+      <span>Qué es el modelo</span>
+      <p>Es una <strong>red neuronal</strong> con parámetros —números internos aprendidos— que transforma una secuencia de tokens en un vector de tamaño fijo. El modelo no guarda una definición legible en cada coordenada: aprende una función que coloca usos semánticamente relacionados en direcciones cercanas.</p>
+    </section>
+    <section className="embedding-training" aria-labelledby="embedding-training-title">
+      <header><span>Una forma habitual de entrenarlo</span><strong id="embedding-training-title">Aprender por contraste: acercar relacionados y separar distintos</strong></header>
+      <div className="training-examples">
+        <article className="positive-pair"><span>par relacionado</span><div><q>automóvil</q><b>↔</b><q>coche</q></div><small>deberían quedar cerca</small></article>
+        <article className="negative-pair"><span>par no relacionado</span><div><q>automóvil</q><b>↮</b><q>receta de cocina</q></div><small>deberían quedar lejos</small></article>
+      </div>
+      <ol className="training-steps">
+        <li><span>1</span><div><strong>Tokenizar</strong><small>El texto se divide en unidades que la red puede procesar.</small></div></li>
+        <li><span>2</span><div><strong>Codificar</strong><small>La red produce un vector para cada texto usando sus pesos actuales.</small></div></li>
+        <li><span>3</span><div><strong>Medir el error</strong><small>Una función de pérdida penaliza pares relacionados lejanos y pares distintos demasiado cercanos.</small></div></li>
+        <li><span>4</span><div><strong>Ajustar los pesos</strong><small>Backpropagation y un optimizador modifican los parámetros para reducir ese error.</small></div></li>
+      </ol>
+      <div className="training-loop"><span>miles o millones de ejemplos</span><b>entrenar → medir → ajustar → repetir</b><span>pesos aprendidos</span></div>
+    </section>
+    <section className="training-vs-inference" aria-label="Diferencia entre entrenamiento e inferencia">
+      <article><span>Entrenamiento</span><strong>Aprende los pesos</strong><p>Lo realiza el creador del modelo con grandes conjuntos de ejemplos y mucho cómputo.</p></article>
+      <article><span>Inferencia en esta POC</span><strong>Usa los pesos ya aprendidos</strong><p>Enviar chunks a OpenAI u Ollama solo calcula vectores. <strong>No reentrena el modelo ni introduce permanentemente tus documentos en él.</strong></p></article>
+    </section>
   </div>
 }
 
@@ -415,10 +437,10 @@ export default function LearningDeck({ onBack }: LearningDeckProps) {
       misconception="Más chunks no significa automáticamente mejor recuperación. Fragmentos minúsculos pierden contexto; fragmentos enormes mezclan temas y consumen más tokens, las unidades con las que el modelo mide texto."
       technical={<><p>El laboratorio mide tamaño y overlap en caracteres; la ventana del LLM se mide en tokens.</p><ul><li>El splitter intenta respetar párrafos y separadores naturales.</li><li>El solapamiento conserva continuidad, pero también duplica texto y costo.</li><li>Cada chunk recibe un ID estable para rastreo y citas.</li></ul></>}><ChunkGraphic chunks={chunks} chunkSize={chunkSize} overlap={overlap} onSize={setChunkSize} onOverlap={setOverlap} articleText={articleText} onArticleText={setArticleText} onResetArticle={() => setArticleText(article)} /></ConceptSlide>,
     <ConceptSlide number={4} eyebrow="representación" title="Un embedding convierte significado en coordenadas"
-      lead="El modelo de embeddings recibe texto y devuelve una lista de números que permite comparar su significado con otros textos."
+      lead="Un modelo de embeddings es una red neuronal entrenada para recibir texto y devolver una lista de números que permita comparar su significado con otros textos."
       analogy="Es asignar una dirección semántica: textos que hablan de ideas parecidas reciben direcciones cercanas, aunque usen palabras distintas."
-      misconception="El modelo de embeddings no contesta la pregunta, no resume el chunk y sus números aislados no son etiquetas interpretables."
-      technical={<><p>La dimensión es la cantidad de números del vector; 1536 es el valor usado por defecto con OpenAI en esta POC.</p><ul><li>Documentos y preguntas deben usar el mismo modelo de embeddings.</li><li>Cambiar el modelo generador no cambia los vectores.</li><li>Cambiar modelo o dimensión de embeddings exige reindexar.</li></ul></>}><EmbeddingGraphic /></ConceptSlide>,
+      misconception="Vectorizar tus documentos no entrena el modelo ni los incorpora a su memoria. El modelo de embeddings tampoco contesta preguntas, resume chunks o asigna una etiqueta interpretable a cada coordenada."
+      technical={<><p>La dimensión es la cantidad de números del vector; 1536 es el valor usado por defecto con OpenAI en esta POC.</p><ul><li>El entrenamiento ajusta parámetros; la inferencia aplica los parámetros ya aprendidos.</li><li>Documentos y preguntas deben usar exactamente el mismo modelo de embeddings.</li><li>Cambiar modelo o dimensión exige reindexar; cambiar solo el generador no cambia los vectores.</li></ul></>}><EmbeddingGraphic /></ConceptSlide>,
     <ConceptSlide number={5} eyebrow="laboratorio real" title="De palabras a vectores, y del vecino a su texto"
       lead="Envía palabras reales a OpenAI, compara sus embeddings y observa cómo el texto original se recupera mediante el ID asociado al vector más cercano."
       analogy="Cada palabra se guarda como una ficha con dos caras: una contiene su dirección numérica y la otra conserva su texto e ID. La dirección ayuda a encontrar la ficha; el ID permite leer su texto."

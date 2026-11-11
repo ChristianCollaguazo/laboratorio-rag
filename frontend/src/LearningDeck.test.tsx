@@ -142,7 +142,13 @@ describe('Aprender RAG', () => {
 
     await user.click(screen.getByRole('button', { name: '04 Embeddings' }))
     expect(document.body).toHaveTextContent('1536 dimensiones')
-    expect(document.body).toHaveTextContent('Documentos y preguntas deben usar el mismo modelo')
+    expect(document.body).toHaveTextContent('Documentos y preguntas deben usar exactamente el mismo modelo')
+    expect(screen.getByLabelText('Qué es un modelo de embeddings')).toHaveTextContent('red neuronal')
+    expect(screen.getByLabelText('Qué es un modelo de embeddings')).toHaveTextContent('parámetros')
+    expect(screen.getByText(/Aprender por contraste/)).toBeInTheDocument()
+    expect(document.body).toHaveTextContent('Tokenizar')
+    expect(document.body).toHaveTextContent('Backpropagation')
+    expect(screen.getByLabelText('Diferencia entre entrenamiento e inferencia')).toHaveTextContent('No reentrena el modelo')
 
     await user.click(screen.getByRole('button', { name: '08 Recuperación' }))
     expect(document.body).toHaveTextContent('candidatos recuperados, todavía no una respuesta')
