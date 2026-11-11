@@ -276,7 +276,7 @@ function VectorSpaceGraphic() {
         <dl><div><dt>n</dt><dd>cantidad de dimensiones</dd></div><div><dt>aᵢ, bᵢ</dt><dd>valor de cada vector en la dimensión i</dd></div><div><dt>Σ</dt><dd>sumar la operación desde i = 1 hasta n</dd></div></dl>
         <p>En el dibujo, <strong>n = 2</strong>. Con un embedding de OpenAI de 1536 dimensiones, la fórmula no cambia: se suman 1536 pares de coordenadas.</p>
       </section>
-      <p className="cosine-reading"><strong>¿Cómo se lee?</strong> A y B forman 45°, así que apuntan en direcciones relacionadas, pero no idénticas. Si apuntaran exactamente igual, la distancia sería 0; si fueran perpendiculares, sería 1. <strong>No significa 70.71 % de confianza</strong>.</p>
+      <p className="cosine-reading"><strong>¿Cómo se lee?</strong> A y B forman 45°, así que apuntan en direcciones relacionadas, pero no idénticas. Con <code>distancia = 1 − coseno</code>: misma dirección da 0, direcciones perpendiculares dan 1 y direcciones exactamente opuestas dan 2. <strong>No significa 70.71 % de confianza</strong>.</p>
     </section>
   </div>
 }
@@ -299,6 +299,11 @@ function ChromaGraphic() {
       <div className="collection-labels"><span>ID</span><span>VECTOR</span><span>METADATOS</span></div>
       {rows.map(row => <div className="collection-row" key={row[0]}><code>{row[0]}</code><code>{row[1]}</code><span>{row[2]}</span></div>)}
     </div>
+    <section className="index-scope" aria-label="Alcance de búsqueda de un índice">
+      <header><span>Alcance del índice</span><strong>El índice seleccionado define dónde se busca</strong></header>
+      <div><span>Documento A</span><span>Documento B</span><span>Documento C</span><b>→ colección / índice →</b><strong>pregunta busca en todos sus chunks</strong></div>
+      <p>Un índice puede reunir chunks de uno o varios documentos. Sin un filtro de metadatos, la recuperación compara la pregunta con todo ese conjunto, no solamente con el documento agregado más recientemente.</p>
+    </section>
     <section className="storage-responsibilities" aria-label="Responsabilidades de Chroma y SQLite">
       <article><header><span>01</span><strong>Chroma · búsqueda vectorial</strong></header><ul><li>Guarda el <strong>vector completo</strong> del chunk.</li><li>Conserva una copia del texto y metadatos necesarios para recuperarlo.</li><li>Calcula vecinos cercanos y devuelve IDs, documentos y distancias.</li></ul></article>
       <article><header><span>02</span><strong>SQLite · catálogo inspeccionable</strong></header><ul><li>Registra documentos, texto extraído, chunks, páginas e IDs.</li><li>Guarda la configuración y el manifiesto de cada índice.</li><li>Solo conserva una <strong>muestra de 8 valores</strong> para visualizar el embedding; no otro índice vectorial.</li></ul></article>
@@ -362,13 +367,37 @@ function GenerationGraphic() {
   const stages = ['pregunta', 'embedding', 'Chroma', 'contexto', 'LLM', 'validación']
   return <div className="generation-graphic">
     <ol>{stages.map((stage, index) => <li key={stage}><span>{index + 1}</span><strong>{stage}</strong></li>)}</ol>
+    <section className="token-generation" aria-label="Cómo genera texto un LLM">
+      <header><span>generación token por token</span><strong>El modelo continúa el texto usando probabilidades</strong><small>ejemplo didáctico</small></header>
+      <div className="token-flow"><div><span>entrada</span><code>system + pregunta + fuentes</code></div><b>→</b><div className="token-options"><span>siguiente token posible</span><code>“RAG” 46 %</code><code>“El” 31 %</code><code>“Según” 14 %</code></div><b>→</b><div><span>token elegido</span><strong>RAG</strong></div><b>↺</b><div><span>repetir</span><code>hasta completar</code></div></div>
+      <p>El LLM no consulta Chroma directamente ni comprueba la verdad de cada frase: predice una continuación condicionada por los mensajes recibidos. Por eso puede producir una <strong>alucinación</strong> —texto plausible pero no respaldado— y necesita reglas, fuentes y validación.</p>
+    </section>
     <div className="generated-answer"><span>respuesta</span><p>RAG representa la pregunta como un embedding y recupera de Chroma los chunks con menor distancia coseno <code>[doc_rag:p1:c003]</code>.</p></div>
     <div className="citation-validator"><div><strong>ID citado</strong><code>doc_rag:p1:c003</code></div><span>→</span><div><strong>IDs recuperados</strong><code>c003 · c004</code></div><span>→</span><b>✓ cita válida</b></div>
     <div className="validation-levels"><div><strong>Validación automática</strong><span>¿El ID citado estaba entre los recuperados?</span></div><div><strong>Evaluación de fidelidad</strong><span>¿La fuente realmente respalda cada afirmación?</span></div></div>
   </div>
 }
 
-const slideTitles = ['Qué es RAG', 'Documento', 'Chunks', 'Embeddings', 'Laboratorio', 'Vectores', 'Base vectorial', 'Recuperación', 'Contexto', 'System prompt', 'Generación y citas']
+function EvaluationGraphic() {
+  return <div className="evaluation-graphic">
+    <section className="golden-set">
+      <header><span>caso de prueba esperado</span><strong>Pregunta + fuentes correctas + comportamiento esperado</strong></header>
+      <div><p>¿Cómo encuentra RAG información relevante?</p><code>debe recuperar: c003</code><code>debe citar: c003</code><code>si falta evidencia: reconocerlo</code></div>
+    </section>
+    <div className="evaluation-dimensions">
+      <article><span>01 · recuperación</span><strong>¿Encontró la evidencia?</strong><dl><div><dt>Hit@k</dt><dd>¿Apareció al menos una fuente esperada entre los primeros k?</dd></div><div><dt>Recall@k</dt><dd>¿Qué proporción de todas las fuentes relevantes fue recuperada?</dd></div><div><dt>Precision@k</dt><dd>¿Qué proporción de los k recuperados era realmente útil?</dd></div></dl></article>
+      <article><span>02 · generación</span><strong>¿Usó bien la evidencia?</strong><dl><div><dt>Fidelidad</dt><dd>¿Cada afirmación está respaldada por las fuentes?</dd></div><div><dt>Relevancia</dt><dd>¿La respuesta atiende la pregunta sin desviarse?</dd></div><div><dt>Citas</dt><dd>¿Los IDs son válidos y respaldan la frase citada?</dd></div></dl></article>
+      <article><span>03 · operación</span><strong>¿Es sostenible?</strong><dl><div><dt>Latencia</dt><dd>Tiempo por extracción, embeddings, búsqueda y generación.</dd></div><div><dt>Tokens y costo</dt><dd>Entrada, salida y llamadas realizadas.</dd></div><div><dt>Actualidad</dt><dd>¿El índice refleja documentos añadidos, cambiados o borrados?</dd></div></dl></article>
+    </div>
+    <section className="failure-diagnosis" aria-label="Diagnóstico de fallos del pipeline">
+      <header><span>Diagnosticar antes de cambiar</span><strong>¿En qué etapa desapareció la evidencia?</strong></header>
+      <div><article><b>La fuente correcta no fue recuperada</b><p>Revisar extracción, chunks, modelo de embeddings, filtros, métrica y <code>top_k</code>.</p></article><span>→</span><article><b>La fuente llegó al contexto, pero la respuesta falló</b><p>Revisar instrucciones, presupuesto de contexto y modelo generador.</p></article><span>→</span><article><b>La respuesta cita un ID desconocido</b><p>Rechazarlo en la validación; no intentar arreglarlo cambiando Chroma.</p></article></div>
+    </section>
+    <div className="improvement-loop"><strong>medir</strong><span>→</span><strong>cambiar una variable</strong><span>→</span><strong>repetir los mismos casos</strong><span>→</span><strong>comparar</strong></div>
+  </div>
+}
+
+const slideTitles = ['Qué es RAG', 'Documento', 'Chunks', 'Embeddings', 'Laboratorio', 'Vectores', 'Base vectorial', 'Recuperación', 'Contexto', 'System prompt', 'Generación y citas', 'Evaluación']
 
 export default function LearningDeck({ onBack }: LearningDeckProps) {
   const [current, setCurrent] = useState(0)
@@ -457,10 +486,10 @@ export default function LearningDeck({ onBack }: LearningDeckProps) {
       misconception="Una base vectorial no crea los embeddings y tampoco redacta respuestas. El modelo de embeddings produce los vectores; Chroma los almacena, los compara y devuelve los chunks asociados."
       technical={<><p>Chroma organiza los registros en colecciones; una colección preparada para búsqueda funciona como índice vectorial.</p><ul><li>Cada registro relaciona ID, vector, texto y metadatos.</li><li>Los metadatos permiten filtrar por documento o página.</li><li>Modelo, dimensión y chunking forman parte de la identidad del índice.</li></ul></>}><ChromaGraphic /></ConceptSlide>,
     <ConceptSlide number={8} eyebrow="búsqueda" title="Recuperar es convertir la pregunta y ordenar candidatos"
-      lead="La pregunta pasa por el mismo modelo de embeddings. Chroma calcula la distancia con cada chunk, los ordena de menor a mayor y top_k decide cuántos pasan al contexto."
+      lead="La pregunta pasa por el mismo modelo de embeddings. Chroma consulta el índice para encontrar los vecinos más cercanos, los ordena por distancia y top_k decide cuántos pasan al contexto."
       analogy="Es pedir a la biblioteca que ordene todas las fichas por cercanía temática y luego decir: “tráeme las primeras k”. Si k vale 2, llevas dos fichas a la mesa."
       misconception="top_k no es un porcentaje ni un mínimo de calidad. Aunque un resultado sea lejano, entrará si está entre los primeros k. Recuperar candidatos tampoco significa que la pregunta ya esté respondida."
-      technical={<><p>El ranking se ordena por distancia coseno ascendente y conserva los primeros <code>k</code>.</p><ul><li><strong>Cobertura:</strong> traer suficiente evidencia relevante.</li><li><strong>Precisión:</strong> evitar chunks irrelevantes o ruido.</li><li>Filtros, umbrales o reranking pueden mejorar el conjunto, pero no forman parte de esta POC básica.</li></ul></>}><RetrievalGraphic topK={topK} onTopK={setTopK} /></ConceptSlide>,
+      technical={<><p>El ranking se ordena por distancia coseno ascendente y conserva los primeros <code>k</code>.</p><ul><li><strong>Cobertura:</strong> traer suficiente evidencia relevante.</li><li><strong>Precisión:</strong> evitar chunks irrelevantes o ruido.</li><li>Conceptualmente se comparan vectores; para escalar, una base vectorial suele usar búsqueda aproximada de vecinos —ANN— en vez de recorrerlos todos uno por uno. Gana velocidad a cambio de poder omitir algún vecino.</li><li>Filtros, umbrales y reranking pueden mejorar el ranking. La búsqueda híbrida combina similitud semántica con coincidencia léxica para nombres, códigos o términos exactos. Estas extensiones no forman parte de la POC básica.</li></ul></>}><RetrievalGraphic topK={topK} onTopK={setTopK} /></ConceptSlide>,
     <ConceptSlide number={9} eyebrow="ensamblaje" title="El contexto es evidencia seleccionada y delimitada"
       lead="Los resultados recuperados se transforman en fuentes identificables. El LLM no abre Chroma: recibe este texto ya construido."
       analogy="Son las páginas que dejaste abiertas sobre la mesa, cada una con un separador que indica de qué libro y página proviene."
@@ -472,10 +501,15 @@ export default function LearningDeck({ onBack }: LearningDeckProps) {
       misconception="Delimitar fuentes reduce el riesgo de prompt injection —instrucciones maliciosas escondidas en los documentos—, pero no constituye por sí solo una defensa completa para producción."
       technical={<><p>Una sola solicitud contiene mensajes con roles distintos.</p><ul><li><code>system</code>: reglas de uso de evidencia y citas.</li><li><code>user</code>: pregunta y bloques <code>source</code>.</li><li>No se envían API keys, cabeceras ni razonamiento interno dentro de esos mensajes.</li></ul></>}><PromptGraphic topK={topK} /></ConceptSlide>,
     <ConceptSlide number={11} eyebrow="salida verificable" title="Generar no basta: la respuesta debe demostrar su evidencia"
-      lead="El LLM redacta usando el payload. Después, el backend acepta solamente citas cuyos IDs estaban entre los chunks recuperados."
+      lead="El LLM genera la respuesta token por token condicionado por las instrucciones, la pregunta y las fuentes. Después, el backend acepta solamente citas cuyos IDs estaban entre los chunks recuperados."
       analogy="No basta con entregar la respuesta: también se revisa que cada nota al pie apunte a una página que realmente estaba sobre la mesa."
-      misconception="Una cita válida demuestra que el ID fue recuperado, no que toda la afirmación sea necesariamente correcta. La evaluación de fidelidad sigue siendo importante."
-      technical={<><p>La validación determinista compara IDs citados contra el conjunto recuperado.</p><ul><li>Un ID desconocido se marca o descarta.</li><li>Si no hay evidencia suficiente, la respuesta correcta es reconocerlo.</li><li>Comprobar que una afirmación está realmente respaldada requiere una evaluación adicional de fidelidad.</li></ul></>}><GenerationGraphic /></ConceptSlide>,
+      misconception="Una salida probable no es necesariamente verdadera. Una cita válida demuestra que el ID fue recuperado, no que toda la afirmación esté respaldada; la evaluación de fidelidad sigue siendo necesaria."
+      technical={<><p>El generador predice continuaciones a partir de los mensajes; las citas también son texto generado y deben validarse.</p><ul><li>Un ID desconocido se marca o descarta de forma determinista.</li><li>Si no hay evidencia suficiente, la respuesta correcta es reconocerlo.</li><li>Comprobar que la fuente respalda realmente cada afirmación requiere evaluar fidelidad, no solo formato.</li></ul></>}><GenerationGraphic /></ConceptSlide>,
+    <ConceptSlide number={12} eyebrow="calidad" title="Evaluar RAG: medir cada etapa antes de mejorarla"
+      lead="Una demo convincente no demuestra que el sistema funcione bien en preguntas distintas. La evaluación usa casos repetibles para medir recuperación, generación, citas, latencia y costo por separado."
+      analogy="Es revisar una línea de producción: si el resultado final falla, primero identificas en qué estación apareció el defecto antes de cambiar toda la fábrica."
+      misconception="No existe una única puntuación que garantice un buen RAG. Mejorar la fluidez de la respuesta no arregla una recuperación deficiente, y aumentar top_k puede añadir ruido y costo."
+      technical={<><p>Un conjunto de evaluación —a veces llamado <em>golden set</em>— reúne preguntas representativas, fuentes esperadas y criterios de respuesta.</p><ul><li>Evalúa recuperación antes de evaluar al LLM.</li><li>Combina métricas automáticas con revisión humana de fidelidad y utilidad.</li><li>Registra configuración, versión del índice y modelos para poder reproducir cada resultado.</li></ul></>}><EvaluationGraphic /></ConceptSlide>,
   ]
 
   return <div className="learning-shell">

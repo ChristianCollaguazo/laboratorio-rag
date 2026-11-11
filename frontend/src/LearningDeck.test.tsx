@@ -4,12 +4,12 @@ import { describe, expect, it, vi } from 'vitest'
 import LearningDeck from './LearningDeck'
 
 describe('Aprender RAG', () => {
-  it('presenta los once conceptos en orden y permite navegar con controles y teclado', async () => {
+  it('presenta los doce conceptos en orden y permite navegar con controles y teclado', async () => {
     const user = userEvent.setup()
     render(<LearningDeck onBack={vi.fn()} />)
 
-    expect(screen.getByText('1 / 11')).toBeInTheDocument()
-    expect(screen.getAllByRole('navigation')[0].querySelectorAll('li')).toHaveLength(11)
+    expect(screen.getByText('1 / 12')).toBeInTheDocument()
+    expect(screen.getAllByRole('navigation')[0].querySelectorAll('li')).toHaveLength(12)
     expect(screen.getByRole('heading', { name: 'RAG: responder con el libro abierto' })).toBeInTheDocument()
 
     document.documentElement.scrollTop = 500
@@ -19,7 +19,7 @@ describe('Aprender RAG', () => {
     fireEvent.keyDown(window, { key: 'ArrowRight' })
     expect(screen.getByRole('heading', { name: 'Chunks: piezas con suficiente contexto' })).toBeInTheDocument()
     fireEvent.keyDown(window, { key: 'End' })
-    expect(screen.getByRole('heading', { name: 'Generar no basta: la respuesta debe demostrar su evidencia' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Evaluar RAG: medir cada etapa antes de mejorarla' })).toBeInTheDocument()
   })
 
   it('hace visible el efecto del tamaño y el solapamiento de chunks', async () => {
@@ -113,6 +113,7 @@ describe('Aprender RAG', () => {
     expect(screen.getByLabelText('Fórmula general para n dimensiones')).toHaveTextContent('Σᵢ₌₁ⁿ aᵢbᵢ')
     expect(screen.getByLabelText('Fórmula general para n dimensiones')).toHaveTextContent('dcos(A,B) = 1 − cos(A,B)')
     expect(screen.getByText(/se suman 1536 pares de coordenadas/)).toBeInTheDocument()
+    expect(screen.getByText(/direcciones exactamente opuestas dan 2/)).toBeInTheDocument()
   })
 
   it('define primero la base de datos vectorial y después presenta Chroma', async () => {
@@ -127,6 +128,8 @@ describe('Aprender RAG', () => {
     expect(container.querySelector('.storage-responsibilities')).toHaveTextContent('vector completo')
     expect(container.querySelector('.storage-responsibilities')).toHaveTextContent('muestra de 8 valores')
     expect(screen.getByText(/No se duplica el vector completo en SQLite/)).toBeInTheDocument()
+    expect(screen.getByLabelText('Alcance de búsqueda de un índice')).toHaveTextContent('uno o varios documentos')
+    expect(screen.getByLabelText('Alcance de búsqueda de un índice')).toHaveTextContent('no solamente con el documento agregado más recientemente')
   })
 
   it('cubre los conceptos críticos de extremo a extremo sin asumir vocabulario previo', async () => {
@@ -154,14 +157,25 @@ describe('Aprender RAG', () => {
     expect(document.body).toHaveTextContent('candidatos recuperados, todavía no una respuesta')
     expect(document.body).toHaveTextContent('Cobertura:')
     expect(document.body).toHaveTextContent('Precisión:')
+    expect(document.body).toHaveTextContent('búsqueda aproximada de vecinos')
 
     await user.click(screen.getByRole('button', { name: '09 Contexto' }))
     expect(document.body).toHaveTextContent('Ventana limitada')
     expect(document.body).toHaveTextContent('límite de tokens')
 
     await user.click(screen.getByRole('button', { name: '11 Generación y citas' }))
+    expect(screen.getByLabelText('Cómo genera texto un LLM')).toHaveTextContent('generación token por token')
+    expect(screen.getByLabelText('Cómo genera texto un LLM')).toHaveTextContent('alucinación')
     expect(document.body).toHaveTextContent('Validación automática')
     expect(document.body).toHaveTextContent('Evaluación de fidelidad')
+
+    await user.click(screen.getByRole('button', { name: '12 Evaluación' }))
+    expect(document.body).toHaveTextContent('Hit@k')
+    expect(document.body).toHaveTextContent('Recall@k')
+    expect(document.body).toHaveTextContent('Precision@k')
+    expect(document.body).toHaveTextContent('Tokens y costo')
+    expect(screen.getByLabelText('Diagnóstico de fallos del pipeline')).toHaveTextContent('La fuente correcta no fue recuperada')
+    expect(screen.getByLabelText('Diagnóstico de fallos del pipeline')).toHaveTextContent('La fuente llegó al contexto, pero la respuesta falló')
   })
 
   it('explica la jerarquía del prompt y la protección de las fuentes', async () => {

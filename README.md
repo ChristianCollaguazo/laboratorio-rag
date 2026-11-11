@@ -11,7 +11,7 @@ Una aplicación para observar y aprender un flujo RAG completo sin esconderlo de
 - Texto pegado, TXT UTF-8 y PDF con texto seleccionable. No hay OCR.
 - Proveedores de embeddings y generación configurables por separado.
 - Vista del texto, chunks, muestra vectorial, resultados, distancias, payload exacto enviado al LLM, respuesta, citas y tokens.
-- Presentación independiente **Aprender RAG** con once conceptos, diagramas, simulaciones locales y un laboratorio opcional de embeddings reales.
+- Presentación independiente **Aprender RAG** con doce conceptos, diagramas, simulaciones locales y un laboratorio opcional de embeddings reales.
 - Sin autenticación, Docker, almacenamiento cloud ni fallback automático entre proveedores.
 
 ## Arquitectura
@@ -205,7 +205,7 @@ Para una primera comprobación utiliza `examples/ecuador.txt` y pregunta **“¿
 
 ## Presentación “Aprender RAG”
 
-El botón **Aprender RAG** abre `#aprender`, una vista didáctica separada del laboratorio. Explica documento, chunks, embeddings, comparación de vectores, recuperación del texto por ID, Chroma, recuperación, contexto, system prompt, generación y validación de citas mediante un mismo caso técnico.
+El botón **Aprender RAG** abre `#aprender`, una vista didáctica separada del laboratorio. Explica documento, chunks, embeddings, comparación de vectores, recuperación del texto por ID, Chroma, recuperación, contexto, system prompt, generación token por token, validación de citas y evaluación del sistema mediante un mismo caso técnico.
 
 La presentación incluye un artículo completo editable para observar cómo cualquier cambio vuelve a dividir el texto, controles locales para comparar tamaños y solapamientos de chunks y una simulación de cómo `top_k` modifica las fuentes del contexto. Todo funciona localmente y sin credenciales salvo la diapositiva **Laboratorio**, que llama a OpenAI únicamente después de pulsar **Generar embeddings reales**. FastAPI envía las palabras, calcula las distancias y devuelve el texto asociado al ID del vecino más cercano; la API key nunca llega al navegador. El laboratorio no guarda datos en Chroma ni modifica documentos o índices persistidos. Usa **Anterior/Siguiente**, el índice lateral o las teclas `←`, `→`, `Home` y `End`; **Volver al laboratorio** conserva el estado de trabajo actual.
 
