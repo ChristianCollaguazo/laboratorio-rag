@@ -226,6 +226,15 @@
 .cosine-general > header { display: grid; gap: 4px; margin-bottom: 12px; }
 .cosine-general > header span { color: var(--mint); font-family: 'DM Mono'; font-size: 9px; letter-spacing: .06em; text-transform: uppercase; }
 .cosine-general > header strong { font-size: 14px; }
+.cosine-notation { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-bottom: 9px; }
+.cosine-notation > div { padding: 11px 12px; display: grid; grid-template-columns: auto 1fr; gap: 5px 12px; align-items: baseline; background: #15261f; border-left: 3px solid var(--mint); }
+.cosine-notation span { color: var(--mint); font-size: 9px; }
+.cosine-notation code { color: white; font-size: 13px; font-weight: 700; text-align: right; }
+.cosine-notation small { grid-column: 1 / -1; color: #b7c8c0; font-size: 8px; line-height: 1.45; }
+.compact-formula { margin-bottom: 9px; padding: 12px; display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; background: #29463a; border: 1px solid #5b7a6d; }
+.compact-formula > span { color: var(--mint); font-size: 9px; }
+.compact-formula > code { color: white; font-size: 14px; text-align: center; }
+.compact-formula > i { color: #b7c8c0; font-size: 8px; font-style: normal; text-align: right; }
 .general-formulas { display: grid; grid-template-columns: 1.5fr 1fr; gap: 9px; }
 .general-formulas > div { min-width: 0; padding: 12px; display: grid; gap: 9px; align-content: center; background: #20342b; border: 1px solid #446157; }
 .general-formulas > div > span { color: #b7c8c0; font-size: 9px; }
@@ -395,6 +404,8 @@
 .cosine-vectors code { font-size: 14px; }.cosine-steps strong, .cosine-steps code, .cosine-reading { font-size: 12px; }
 .cosine-plane figcaption { font-size: 11px; }
 .cosine-general > header span { font-size: 11px; }.cosine-general > header strong { font-size: 17px; }
+.cosine-notation span, .compact-formula > span { font-size: 11px; }.cosine-notation code, .compact-formula > code { font-size: 15px; }
+.cosine-notation small, .compact-formula > i { font-size: 10px; }
 .general-formulas > div > span { font-size: 11px; }.general-formulas code { font-size: 15px; }
 .cosine-general dt { font-size: 12px; }.cosine-general dd, .cosine-general > p { font-size: 11px; }
 .vector-db-definition > span, .example-label span, .implementation-label span { font-size: 10px; }
@@ -465,7 +476,8 @@
   .metric-explainer { grid-template-columns: 1fr; }
   .cosine-example > header, .cosine-demo-body, .cosine-steps, .storage-responsibilities { grid-template-columns: 1fr; }
   .cosine-vectors { flex-direction: column; }
-  .general-formulas, .cosine-general dl { grid-template-columns: 1fr; }
+  .cosine-notation, .general-formulas, .cosine-general dl { grid-template-columns: 1fr; }
+  .compact-formula { grid-template-columns: 1fr; }.compact-formula > code, .compact-formula > i { text-align: left; }
   .storage-flow { grid-template-columns: 1fr; }.storage-flow b::after { content: ' ↓'; }
   .article-editor header { align-items: flex-start; flex-direction: column; }
   .article-editor textarea { min-height: 260px; }

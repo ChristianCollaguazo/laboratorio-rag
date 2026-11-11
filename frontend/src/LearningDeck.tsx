@@ -242,8 +242,13 @@ function VectorSpaceGraphic() {
       </div>
       <section className="cosine-general" aria-label="Fórmula general para n dimensiones">
         <header><span>La misma operación para cualquier dimensión</span><strong>Fórmula general para <i>n</i> dimensiones</strong></header>
+        <div className="cosine-notation">
+          <div><span>Producto punto</span><code>A · B = Σᵢ₌₁ⁿ aᵢbᵢ</code><small>Se lee “A punto B”. Multiplica las coordenadas correspondientes y suma los resultados.</small></div>
+          <div><span>Norma o magnitud</span><code>‖A‖ = √(A · A)</code><small>Representa la longitud del vector A.</small></div>
+        </div>
+        <div className="compact-formula"><span>Notación compacta</span><code>cos(A,B) = <span className="fraction"><b>A · B</b><b>‖A‖ · ‖B‖</b></span></code><i>↓ sustituir el producto punto y las normas por sus sumatorias</i></div>
         <div className="general-formulas">
-          <div><span>Similitud coseno</span><code>cos(A,B) = <span className="fraction"><b>Σᵢ₌₁ⁿ aᵢbᵢ</b><b>√(Σᵢ₌₁ⁿ aᵢ²) · √(Σᵢ₌₁ⁿ bᵢ²)</b></span></code></div>
+          <div><span>Forma desarrollada</span><code>cos(A,B) = <span className="fraction"><b>Σᵢ₌₁ⁿ aᵢbᵢ</b><b>√(Σᵢ₌₁ⁿ aᵢ²) · √(Σᵢ₌₁ⁿ bᵢ²)</b></span></code></div>
           <div className="general-distance"><span>Distancia coseno</span><code>d<sub>cos</sub>(A,B) = 1 − cos(A,B)</code></div>
         </div>
         <dl><div><dt>n</dt><dd>cantidad de dimensiones</dd></div><div><dt>aᵢ, bᵢ</dt><dd>valor de cada vector en la dimensión i</dd></div><div><dt>Σ</dt><dd>sumar la operación desde i = 1 hasta n</dd></div></dl>
