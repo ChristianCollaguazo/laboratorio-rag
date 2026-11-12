@@ -108,6 +108,40 @@ describe('Learning deck', () => {
     vi.unstubAllGlobals()
   })
 
+  it('explains duplicate candidates without sending a request', async () => {
+    const user = userEvent.setup()
+    const fetchMock = vi.fn()
+    vi.stubGlobal('fetch', fetchMock)
+    render(<LearningDeck onBack={vi.fn()} />)
+    await user.click(screen.getByRole('button', { name: '05 Laboratorio' }))
+    fireEvent.change(screen.getByLabelText('Textos candidatos'), {
+      target: { value: 'El mismo texto.\nEl mismo texto.' },
+    })
+    await user.click(screen.getByRole('button', { name: 'Generar embeddings reales' }))
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Los textos candidatos deben ser diferentes entre sí.')
+    expect(screen.getByRole('alert')).not.toHaveTextContent('[object Object]')
+    expect(fetchMock).not.toHaveBeenCalled()
+    vi.unstubAllGlobals()
+  })
+
+  it('formats structured FastAPI validation errors as readable text', async () => {
+    const user = userEvent.setup()
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      detail: [{
+        type: 'value_error', loc: ['body'],
+        msg: 'Value error, La solicitud de prueba no es válida.', input: {},
+      }],
+    }), { status: 422, headers: { 'Content-Type': 'application/json' } })))
+    render(<LearningDeck onBack={vi.fn()} />)
+    await user.click(screen.getByRole('button', { name: '05 Laboratorio' }))
+    await user.click(screen.getByRole('button', { name: 'Generar embeddings reales' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('La solicitud de prueba no es válida.')
+    expect(screen.getByRole('alert')).not.toHaveTextContent('[object Object]')
+    vi.unstubAllGlobals()
+  })
+
   it('connects top_k with the chunks included in context', async () => {
     const user = userEvent.setup()
     const { container } = render(<LearningDeck onBack={vi.fn()} />)

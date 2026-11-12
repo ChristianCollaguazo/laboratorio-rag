@@ -13,10 +13,10 @@ class EmbeddingLabRequest(BaseModel):
         self.candidates = [item.strip() for item in self.candidates]
         if not self.query or any(not item for item in self.candidates):
             raise ValueError(
-                "La consulta y las palabras candidatas no pueden estar vacías."
+                "La consulta y los textos candidatos no pueden estar vacíos."
             )
         if len({item.casefold() for item in self.candidates}) != len(self.candidates):
-            raise ValueError("Las palabras candidatas deben ser diferentes entre sí.")
+            raise ValueError("Los textos candidatos deben ser diferentes entre sí.")
         return self
 
 

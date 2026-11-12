@@ -29,6 +29,10 @@ export default function LearningDeck({ onBack }: { onBack: () => void }) {
       setLabError('Escribe una consulta y entre 2 y 6 textos candidatos.')
       return
     }
+    if (new Set(candidates.map(item => item.toLocaleLowerCase())).size !== candidates.length) {
+      setLabError('Los textos candidatos deben ser diferentes entre sí.')
+      return
+    }
     setLabBusy(true)
     setLabError('')
     try {

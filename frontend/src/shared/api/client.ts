@@ -1,12 +1,33 @@
 import type { ChatResult, ChunkSet, DocumentView, EmbeddingLabResult, IndexView, ProviderConfig, Retrieval, Status } from './contracts'
 
+function formatErrorDetail(detail: unknown, fallback: string): string {
+  if (typeof detail === 'string') return detail
+  if (Array.isArray(detail)) {
+    const messages = detail.flatMap(item => {
+      if (typeof item === 'string') return [item]
+      if (item && typeof item === 'object' && 'msg' in item && typeof item.msg === 'string') {
+        return [item.msg.replace(/^Value error,\s*/i, '')]
+      }
+      return []
+    })
+    if (messages.length) return messages.join(' ')
+  }
+  if (detail && typeof detail === 'object') {
+    if ('message' in detail && typeof detail.message === 'string') return detail.message
+    if ('msg' in detail && typeof detail.msg === 'string') return detail.msg
+  }
+  return fallback
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(path, init)
   if (!response.ok) {
     let message = `Error HTTP ${response.status}`
     try {
-      const payload = await response.json()
-      message = payload.detail ?? message
+      const payload: unknown = await response.json()
+      if (payload && typeof payload === 'object' && 'detail' in payload) {
+        message = formatErrorDetail(payload.detail, message)
+      }
     } catch { /* response has no JSON body */ }
     throw new Error(message)
   }
