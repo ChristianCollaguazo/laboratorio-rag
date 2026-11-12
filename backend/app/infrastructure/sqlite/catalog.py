@@ -109,6 +109,11 @@ class Catalog:
         item["chunks"] = [dict(chunk) for chunk in chunks]
         return item
 
+    def delete_chunk_sets_for_document(self, document_id: str) -> None:
+        """Replace the editable chunking draft without modifying persisted indices."""
+        with self.connect() as db:
+            db.execute("DELETE FROM chunk_sets WHERE document_id = ?", (document_id,))
+
     def create_index(self, item: dict[str, Any]) -> None:
         with self.connect() as db:
             db.execute(
@@ -145,6 +150,11 @@ class Catalog:
         with self.connect() as db:
             cursor = db.execute("DELETE FROM indices WHERE id = ?", (index_id,))
         return cursor.rowcount > 0
+
+    def clear_library(self) -> None:
+        with self.connect() as db:
+            db.execute("DELETE FROM indices")
+            db.execute("DELETE FROM documents")
 
     def update_index_contents(
         self, index_id: str, document_ids: list[str], chunk_count: int

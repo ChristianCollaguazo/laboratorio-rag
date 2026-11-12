@@ -69,6 +69,10 @@ class DocumentService:
             chunks=chunks,
             created_at=self.catalog.now(),
         )
+        # Chunk IDs are stable per document and position. Replace the editable
+        # chunking draft before persisting a new configuration; existing Chroma
+        # collections remain intact and continue serving already-created indices.
+        self.repository.delete_chunk_sets_for_document(document_id)
         self.repository.create_chunk_set(
             {
                 "id": chunk_set.id,

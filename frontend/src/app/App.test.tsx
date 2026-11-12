@@ -51,6 +51,53 @@ describe('RAG Lab', () => {
     expect(screen.getByText(/máx\. 1536/)).toBeInTheDocument()
   })
 
+  it('lets numeric configuration fields remain empty while they are being edited', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    const chunkSize = screen.getByLabelText('Tamaño (chunk size)')
+    await user.clear(chunkSize)
+
+    expect(chunkSize).toHaveValue('')
+    expect(screen.queryByDisplayValue('0')).not.toBeInTheDocument()
+  })
+
+  it('builds a shared index from all saved documents by default', async () => {
+    const documents = [
+      { id: 'doc_one', title: 'Uno', kind: 'text', text: 'Primer documento.', pages: [{ page: 1, text: 'Primer documento.' }], created_at: '2026-01-01T00:00:00Z' },
+      { id: 'doc_two', title: 'Dos', kind: 'text', text: 'Segundo documento.', pages: [{ page: 1, text: 'Segundo documento.' }], created_at: '2026-01-01T00:00:00Z' },
+    ]
+    const index = {
+      id: 'idx_shared', collection_name: 'rag_shared',
+      embedding: { provider: 'openai', model: 'text-embedding-3-small', dimensions: 1536 },
+      chunking: { chunk_size: 800, chunk_overlap: 120 }, distance_metric: 'cosine',
+      document_ids: ['doc_one', 'doc_two'], chunk_count: 2, embedding_sample: [0.1], created_at: '2026-01-01T00:00:00Z',
+    }
+    let chunkNumber = 0
+    vi.stubGlobal('fetch', vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
+      const path = String(input)
+      let data: unknown = []
+      if (path.endsWith('/status')) data = status
+      else if (path.endsWith('/documents') && !init?.method) data = documents
+      else if (path.endsWith('/chunks')) {
+        chunkNumber += 1
+        data = { id: `chunks_${chunkNumber}`, document_id: `doc_${chunkNumber}`, config: { chunk_size: 800, chunk_overlap: 120 }, chunks: [] }
+      } else if (path.endsWith('/indices') && init?.method === 'POST') data = index
+      return Promise.resolve(new Response(JSON.stringify(data), { status: 200, headers: { 'Content-Type': 'application/json' } }))
+    }))
+
+    const user = userEvent.setup()
+    render(<App />)
+    const buildButton = await screen.findByRole('button', { name: 'Crear índice compartido (2)' })
+    expect(screen.getByRole('checkbox', { name: 'Todos los documentos' })).toBeChecked()
+    await user.click(buildButton)
+
+    await waitFor(() => expect(screen.getByText(/Índice compartido creado con 2 documento/)).toBeInTheDocument())
+    expect(fetch).toHaveBeenCalledWith('/api/v1/documents/doc_one/chunks', expect.any(Object))
+    expect(fetch).toHaveBeenCalledWith('/api/v1/documents/doc_two/chunks', expect.any(Object))
+    expect(fetch).toHaveBeenCalledWith('/api/v1/indices', expect.objectContaining({ method: 'POST' }))
+  })
+
   it('navigates to the presentation and back with clean URLs', async () => {
     const user = userEvent.setup()
     render(<App />)
@@ -85,7 +132,7 @@ describe('RAG Lab', () => {
       source_count: 1, context_characters: context.length, elapsed_ms: 8.5,
     }
     const chat = {
-      answer: 'La capital es Quito [doc_ecuador:p1:c000].', citations: ['doc_ecuador:p1:c000'], invalid_citations: [],
+      answer: '**La capital es Quito.** [doc_ecuador:p1:c000]', citations: ['doc_ecuador:p1:c000'], invalid_citations: [],
       retrieved: retrieval.chunks, question: retrieval.question, context, llm_messages: messages,
       source_count: 1, context_characters: context.length,
       generation: { provider: 'openai', model: 'gpt-6-luna' },
@@ -126,6 +173,13 @@ describe('RAG Lab', () => {
     expect(screen.getByText(/permanecen en este Mac/)).toBeInTheDocument()
     await user.click(groups[1].querySelectorAll('button')[0])
     await user.click(screen.getByRole('button', { name: 'Preguntar' }))
+    await user.click(screen.getByRole('button', { name: 'respuesta' }))
+
+    expect(screen.getByText('La capital es Quito.').tagName).toBe('STRONG')
+    await user.click(screen.getAllByRole('button', { name: 'doc_ecuador:p1:c000' })[0])
+    expect(screen.getByRole('heading', { name: 'Fragmentos recuperados' })).toBeInTheDocument()
+    expect(screen.getByText('Quito es la capital del Ecuador.')).toBeInTheDocument()
+
     await user.click(screen.getByRole('button', { name: 'envío LLM' }))
 
     expect(screen.getByText('✓ Enviado')).toBeInTheDocument()

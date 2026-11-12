@@ -31,13 +31,35 @@ export function useLaboratoryController() {
     },
   })
   const createChunks = useMutation({
-    mutationFn: () => api.chunks(state.document!.id, state.chunkSize, state.overlap),
+    mutationFn: ({ chunkSize, overlap }: { chunkSize: number, overlap: number }) =>
+      api.chunks(state.document!.id, chunkSize, overlap),
     onSuccess: chunkSet => patch({ chunkSet, index: null, retrieval: null, chat: null, tab: 'chunks', notice: `${chunkSet.chunks.length} fragmentos creados.` }),
   })
   const createIndex = useMutation({
     mutationFn: () => api.createIndex(state.chunkSet!.id, state.embedding),
     onSuccess: async index => {
       patch({ index, retrieval: null, chat: null, tab: 'embedding', notice: `Índice ${index.collection_name} persistido en Chroma.` })
+      await queryClient.invalidateQueries({ queryKey: ['indices'] })
+    },
+  })
+  const createSharedIndex = useMutation({
+    mutationFn: async (documentIds: string[]) => {
+      const chunkSets = []
+      for (const documentId of documentIds) {
+        chunkSets.push(await api.chunks(documentId, state.chunkSize, state.overlap))
+      }
+      const index = await api.createIndex(chunkSets.map(chunkSet => chunkSet.id), state.embedding)
+      return { index, chunkSets }
+    },
+    onSuccess: async ({ index, chunkSets }) => {
+      patch({
+        chunkSet: chunkSets.at(-1) ?? null,
+        index,
+        retrieval: null,
+        chat: null,
+        tab: 'embedding',
+        notice: `Índice compartido creado con ${index.document_ids.length} documento(s) y ${index.chunk_count} chunks.`,
+      })
       await queryClient.invalidateQueries({ queryKey: ['indices'] })
     },
   })
@@ -74,8 +96,26 @@ export function useLaboratoryController() {
       await queryClient.invalidateQueries({ queryKey: ['indices'] })
     },
   })
+  const clearLibrary = useMutation({
+    mutationFn: api.clearLibrary,
+    onSuccess: async () => {
+      patch({
+        document: null,
+        chunkSet: null,
+        index: null,
+        retrieval: null,
+        chat: null,
+        tab: 'texto',
+        notice: 'La biblioteca local quedó vacía.',
+      })
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['documents'] }),
+        queryClient.invalidateQueries({ queryKey: ['indices'] }),
+      ])
+    },
+  })
 
-  const mutations = { createText, upload, createChunks, createIndex, retrieve, chat, deleteDocument, deleteIndex }
+  const mutations = { createText, upload, createChunks, createIndex, createSharedIndex, retrieve, chat, deleteDocument, deleteIndex, clearLibrary }
   const activeMutation = Object.entries(mutations).find(([, mutation]) => mutation.isPending)?.[0] ?? null
   const mutationError = Object.values(mutations).find(mutation => mutation.error)?.error
   const queryError = statusQuery.error ?? documentsQuery.error ?? indicesQuery.error

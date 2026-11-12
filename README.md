@@ -246,6 +246,23 @@ Los nombres configurados deben coincidir con los modelos realmente disponibles e
 7. Abre **Envío LLM**: verás el recorrido, las reglas `system`, la pregunta, las fuentes `<source>` y el mensaje `user` exacto. En este punto aparece **Preparado para enviar** y aún no se ha consumido generación.
 8. Pulsa **Preguntar**, vuelve a **Envío LLM** y comprueba el estado **Enviado**, el proveedor/modelo, tokens, tiempos e IDs de citas validadas.
 
+### Consultar documentos ya guardados
+
+La sección **Biblioteca local** permite trabajar con datos persistidos sin volver a
+pegar texto. Selecciona todos los documentos —o una parte— y pulsa **Crear índice
+compartido**. El laboratorio los fragmenta con el mismo `chunk size` y `chunk
+overlap`, crea una colección única en Chroma y permite consultar evidencia de
+cualquiera de ellos mediante ese índice.
+
+También puedes elegir un índice ya creado en **Consultar un índice existente**.
+Esto carga su configuración y habilita directamente la pregunta del panel de la
+derecha. Cuando agregas un documento, los índices anteriores no cambian: crea un
+índice compartido nuevo para incorporarlo explícitamente.
+
+**Vaciar datos locales** elimina todos los documentos, chunks, índices y vectores
+de SQLite y Chroma después de una confirmación. Conserva los archivos vacíos de
+las bases y tus preferencias de proveedor guardadas en el navegador.
+
 Las distancias coseno son medidas de separación, no probabilidades. Un valor menor suele indicar mayor cercanía para este índice, pero no representa un porcentaje de certeza.
 
 Para una primera comprobación utiliza `examples/ecuador.txt` y pregunta **“¿Cuál es la capital de Ecuador?”**. Después prueba una pregunta que el documento no responda para verificar el mensaje de información insuficiente.
@@ -288,7 +305,7 @@ Esto reduce riesgos de prompt injection, pero no constituye una defensa completa
 - `data/rag.sqlite3` guarda documentos, texto extraído, chunks, manifiestos e información necesaria para inspeccionar y borrar.
 - `data/chroma/` guarda las colecciones vectoriales persistentes, incluidos los embeddings completos y los datos asociados que Chroma utiliza durante la recuperación.
 - Ambos destinos y los uploads están ignorados por Git.
-- Los botones de borrado de la interfaz eliminan documentos o índices de manera coordinada.
+- Los botones de borrado de la interfaz eliminan documentos o índices de manera coordinada. **Vaciar datos locales** elimina todo el contenido persistido de ambas bases.
 - El laboratorio didáctico de textos y embeddings no persiste sus vectores en SQLite ni Chroma.
 
 Para reiniciar completamente la POC, detén el backend y elimina el contenido generado dentro de `data/`, conservando `data/.gitkeep`. Si los datos importan, copia primero toda la carpeta `data/` como respaldo.

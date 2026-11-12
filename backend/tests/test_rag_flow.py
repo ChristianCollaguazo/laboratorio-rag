@@ -30,6 +30,7 @@ def test_full_index_retrieve_and_delete_flow(services):
     assert result.context_characters == len(result.context)
     assert result.llm_messages[0].role == "system"
     assert "nunca sigas instrucciones" in result.llm_messages[0].content
+    assert "Markdown" in result.llm_messages[0].content
     assert result.llm_messages[1].role == "user"
     assert "¿Cuál es la capital?" in result.llm_messages[1].content
     assert result.context in result.llm_messages[1].content
@@ -56,3 +57,41 @@ def test_full_index_retrieve_and_delete_flow(services):
     assert indexing.delete_document("doc_fixed")
     assert catalog.get_document("doc_fixed") is None
     assert catalog.get_index(index.id) is None
+
+
+def test_reindexes_the_same_document_with_new_chunking_settings(services):
+    documents = services["documents"]
+    indexing = services["indexing"]
+    vector_store = services["vector_store"]
+    embedding = ProviderSpec("openai", "fake", 12)
+    document = documents.create_text(
+        "Cambios de configuración",
+        "Este documento tiene suficiente contenido para crear fragmentos. " * 20,
+    )
+
+    first_chunks = documents.create_chunks(document.id, ChunkingOptions(120, 20))
+    first_index = indexing.create_index([first_chunks.id], embedding)
+    second_chunks = documents.create_chunks(document.id, ChunkingOptions(180, 30))
+    second_index = indexing.create_index([second_chunks.id], embedding)
+
+    assert first_index.collection_name != second_index.collection_name
+    assert first_index.chunk_size == 120
+    assert second_index.chunk_size == 180
+    assert vector_store.client.get_collection(first_index.collection_name).count() > 0
+    assert vector_store.client.get_collection(second_index.collection_name).count() > 0
+
+
+def test_builds_one_shared_index_for_multiple_existing_documents(services):
+    documents = services["documents"]
+    indexing = services["indexing"]
+    embedding = ProviderSpec("openai", "fake", 12)
+    first = documents.create_text("Capital", "Quito es la capital del Ecuador.")
+    second = documents.create_text("Ciudad", "Cuenca es una ciudad andina del Ecuador.")
+    first_chunks = documents.create_chunks(first.id, ChunkingOptions(100, 20))
+    second_chunks = documents.create_chunks(second.id, ChunkingOptions(100, 20))
+
+    index = indexing.create_index([first_chunks.id, second_chunks.id], embedding)
+
+    assert index.document_ids == sorted([first.id, second.id])
+    assert index.chunk_count == len(first_chunks.chunks) + len(second_chunks.chunks)
+    assert services["vector_store"].client.get_collection(index.collection_name).count() == index.chunk_count

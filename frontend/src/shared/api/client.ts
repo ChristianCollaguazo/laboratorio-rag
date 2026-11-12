@@ -54,8 +54,11 @@ export const api = {
   },
   chunks: (documentId: string, chunkSize: number, chunkOverlap: number) =>
     request<ChunkSet>(`/api/v1/documents/${documentId}/chunks`, json({ chunk_size: chunkSize, chunk_overlap: chunkOverlap })),
-  createIndex: (chunkSetId: string, embedding: ProviderConfig) =>
-    request<IndexView>('/api/v1/indices', json({ chunk_set_ids: [chunkSetId], embedding })),
+  createIndex: (chunkSetIds: string | string[], embedding: ProviderConfig) =>
+    request<IndexView>('/api/v1/indices', json({
+      chunk_set_ids: Array.isArray(chunkSetIds) ? chunkSetIds : [chunkSetIds],
+      embedding,
+    })),
   retrieve: (indexId: string, question: string, topK: number, embedding: ProviderConfig) =>
     request<Retrieval>('/api/v1/retrieve', json({ index_id: indexId, question, top_k: topK, embedding })),
   chat: (indexId: string, question: string, topK: number, embedding: ProviderConfig, generation: ProviderConfig) =>
@@ -66,4 +69,5 @@ export const api = {
     })),
   deleteDocument: (id: string) => request<void>(`/api/v1/documents/${id}`, { method: 'DELETE' }),
   deleteIndex: (id: string) => request<void>(`/api/v1/indices/${id}`, { method: 'DELETE' }),
+  clearLibrary: () => request<void>('/api/v1/library', { method: 'DELETE' }),
 }

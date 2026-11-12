@@ -64,6 +64,7 @@ textarea { resize: vertical; line-height: 1.5; }
 .mini { flex: 0 0 auto; width: 6px; height: 6px; margin-top: 4px; border-radius: 50%; background: #e29a54; }
 .mini.ok { background: #4ca573; }
 .number-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+.field-error { margin: 10px 0 0; color: #a53e2a; font-size: 10px; line-height: 1.45; }
 .button-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 button { background: transparent; color: var(--ink); border: 1px solid var(--ink); padding: 10px 13px; font-weight: 700; font-size: 11px; }
 button:hover:not(:disabled) { background: #e3e8df; }
@@ -99,8 +100,24 @@ button.primary:hover:not(:disabled) { background: #0e3b2a; }
 .manifest dt { font-size: 9px; text-transform: uppercase; color: var(--muted); }
 .manifest dd { margin: 6px 0 0; font-size: 12px; overflow-wrap: anywhere; }
 .answer { font-size: 19px; line-height: 1.75; padding: 25px 0; }
+.answer > :first-child { margin-top: 0; }
+.answer > :last-child { margin-bottom: 0; }
+.answer h1, .answer h2, .answer h3 { margin: 1.25em 0 .45em; letter-spacing: -.03em; line-height: 1.15; }
+.answer h1 { font-size: 1.55em; }
+.answer h2 { font-size: 1.3em; }
+.answer h3 { font-size: 1.1em; }
+.answer p { margin: 0 0 1em; }
+.answer ul, .answer ol { margin: 0 0 1em; padding-left: 1.35em; }
+.answer li + li { margin-top: .35em; }
+.answer blockquote { margin: 1em 0; padding: .4em 1em; border-left: 4px solid var(--mint); background: #eaf4eb; }
+.answer code { padding: .1em .3em; background: #eceae2; font-family: 'DM Mono'; font-size: .8em; }
+.answer pre { overflow: auto; padding: 14px; background: var(--ink); color: #d4eadc; }
+.answer pre code { padding: 0; background: transparent; color: inherit; }
+.citation-link, .citations button { display: inline; padding: .08em .28em; border: 0; border-bottom: 1px solid var(--forest); color: var(--forest); background: var(--mint); font-family: 'DM Mono'; font-size: .7em; font-weight: 700; cursor: pointer; }
+.citation-link:hover, .citations button:hover { background: #b8e6c5; }
 .citations { display: flex; flex-wrap: wrap; gap: 8px; }
-.citations code { padding: 7px 9px; background: var(--mint); font-size: 10px; }
+.citations button { display: block; padding: 7px 9px; font-size: 10px; }
+.chunk-card.focused { border-color: var(--orange); box-shadow: 0 0 0 3px #ee7c4530; }
 .invalid { color: #a53e2a; font-size: 11px; }
 .usage { font-family: 'DM Mono'; color: var(--muted); font-size: 10px; margin-top: 24px; }
 .llm-delivery { display: grid; gap: 22px; }
@@ -147,10 +164,22 @@ button.primary:hover:not(:disabled) { background: #0e3b2a; }
 .library h2 { font-size: 32px; margin: 10px 0; letter-spacing: -.04em; }
 .library-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
 .library-grid h3 { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; border-bottom: 1px solid var(--ink); padding-bottom: 10px; }
+.library-section { display: grid; align-content: start; gap: 12px; }
+.library-heading { display: flex; justify-content: space-between; align-items: center; gap: 10px; border-bottom: 1px solid var(--ink); }
+.library-heading h3 { flex: 1; border: 0; }
+.select-all, .document-check { display: flex; align-items: flex-start; gap: 8px; margin: 0; font-size: 10px; letter-spacing: 0; }
+.select-all input, .document-check input { width: 14px; height: 14px; padding: 0; margin: 1px 0 0; accent-color: var(--forest); }
+.library-list { display: grid; }
 .library-item { display: grid; grid-template-columns: 1fr 36px; border-bottom: 1px solid var(--line); }
 .item-main { border: 0; text-align: left; display: grid; gap: 4px; padding-left: 0; }
 .item-main small { color: var(--muted); font-weight: 400; }
+.document-check { padding: 10px 0; }
+.document-check span { display: grid; gap: 4px; }
+.document-check small { color: var(--muted); font-weight: 400; }
 .danger { border: 0; color: #a33; font-size: 20px; }
+.danger-button { margin-top: 16px; border-color: #a33; color: #a33; }
+.danger-button:hover:not(:disabled) { background: #fbe9e4; }
+.loaded-index { margin: 0; padding: 11px; border-left: 3px solid var(--forest); background: var(--mint); font-size: 11px; line-height: 1.5; }
 .muted { color: var(--muted); font-size: 12px; }
 footer { border-top: 1px solid var(--ink); display: flex; justify-content: space-between; align-items: center; padding: 20px 0; font-size: 10px; color: var(--muted); }
 .app-shell > footer button { padding: 6px 10px; border: 0; color: var(--forest); }

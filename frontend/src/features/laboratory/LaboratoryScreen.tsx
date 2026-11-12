@@ -41,7 +41,7 @@ export function LaboratoryScreen() {
         <IndexingPanel chunkSize={state.chunkSize} overlap={state.overlap} topK={state.topK}
           canChunk={Boolean(state.document)} canIndex={Boolean(state.chunkSet)} busy={busy}
           onChunkSize={chunkSize => patch({ chunkSize })} onOverlap={overlap => patch({ overlap })}
-          onTopK={topK => patch({ topK })} onChunk={() => mutations.createChunks.mutate()}
+          onTopK={topK => patch({ topK })} onChunk={(chunkSize, overlap) => mutations.createChunks.mutate({ chunkSize, overlap })}
           onIndex={() => mutations.createIndex.mutate()} />
       </aside>
       <PipelineInspector controller={controller} />

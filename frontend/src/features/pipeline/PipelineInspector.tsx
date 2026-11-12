@@ -1,6 +1,8 @@
+import { useState } from 'react'
 import type { LaboratoryController } from '../laboratory/useLaboratoryController'
 import type { LaboratoryTab } from '../laboratory/state'
 import { LlmDeliveryFlow } from '../generation/LlmDeliveryFlow'
+import { MarkdownAnswer } from '../generation/MarkdownAnswer'
 import styles from '../laboratory/Laboratory.module.css'
 
 function Empty({ text }: { text: string }) {
@@ -9,10 +11,21 @@ function Empty({ text }: { text: string }) {
 
 export function PipelineInspector({ controller }: { controller: LaboratoryController }) {
   const { state, patch, activeMutation, mutations } = controller
+  const [focusedChunkId, setFocusedChunkId] = useState<string | null>(null)
   const tabs: [LaboratoryTab, string][] = [
     ['texto', 'texto'], ['chunks', 'chunks'], ['embedding', 'embedding'],
     ['recuperacion', 'recuperación'], ['envio', 'envío LLM'], ['respuesta', 'respuesta'],
   ]
+  const showChunk = (chunkId: string) => {
+    setFocusedChunkId(chunkId)
+    patch({ tab: 'recuperacion' })
+    window.setTimeout(() => {
+      const target = document.getElementById(`chunk-${chunkId}`)
+      if (typeof target?.scrollIntoView === 'function') {
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }
+    }, 0)
+  }
   return <section className={[styles['inspector']].filter(Boolean).join(' ')}>
     <nav className={[styles['tabs']].filter(Boolean).join(' ')} aria-label="Resultados del pipeline">
       {tabs.map(([item, label]) => <button key={item} className={state.tab === item ? styles.active : ''} onClick={() => patch({ tab: item })}>{label}</button>)}
@@ -35,13 +48,13 @@ export function PipelineInspector({ controller }: { controller: LaboratoryContro
       {state.tab === 'recuperacion' && (state.retrieval ? <>
         <div className={[styles['panel-heading']].filter(Boolean).join(' ')}><div><span className={[styles['kind']].filter(Boolean).join(' ')}>top {state.topK}</span><h2>Fragmentos recuperados</h2></div><span>{state.retrieval.elapsed_ms.toFixed(1)} ms</span></div>
         <p className={[styles['explanation']].filter(Boolean).join(' ')}>La distancia coseno mide separación: menor suele significar mayor cercanía. No es una probabilidad.</p>
-        <div className={[styles['chunk-list']].filter(Boolean).join(' ')}>{state.retrieval.chunks.map(chunk => <article key={chunk.id} className={[styles['chunk-card'], styles['retrieved']].filter(Boolean).join(' ')}><header><code>{chunk.id}</code><strong>{chunk.distance.toFixed(4)}</strong></header><p>{chunk.text}</p></article>)}</div>
+        <div className={[styles['chunk-list']].filter(Boolean).join(' ')}>{state.retrieval.chunks.map(chunk => <article id={`chunk-${chunk.id}`} key={chunk.id} className={[styles['chunk-card'], styles['retrieved'], focusedChunkId === chunk.id ? styles.focused : ''].filter(Boolean).join(' ')}><header><code>{chunk.id}</code><strong>{chunk.distance.toFixed(4)}</strong></header><p>{chunk.text}</p></article>)}</div>
       </> : <Empty text="Escribe una pregunta y ejecuta recuperación para comparar distancias." />)}
       {state.tab === 'envio' && (state.retrieval ? <LlmDeliveryFlow retrieval={state.retrieval} generation={state.chat?.generation ?? state.generation} embedding={state.embedding} topK={state.topK} chat={state.chat} /> : <Empty text="Ejecuta la recuperación para preparar y visualizar el payload del LLM antes de enviarlo." />)}
       {state.tab === 'respuesta' && (state.chat ? <>
         <div className={[styles['panel-heading']].filter(Boolean).join(' ')}><div><span className={[styles['kind']].filter(Boolean).join(' ')}>{state.generation.model}</span><h2>Respuesta con evidencia</h2></div><span>{state.chat.timings_ms.total?.toFixed(0)} ms</span></div>
-        <div className={[styles['answer']].filter(Boolean).join(' ')}>{state.chat.answer}</div>
-        <h3>Citas verificadas</h3><div className={[styles['citations']].filter(Boolean).join(' ')}>{state.chat.citations.length ? state.chat.citations.map(id => <code key={id}>{id}</code>) : <span>Ninguna cita válida.</span>}</div>
+        <MarkdownAnswer answer={state.chat.answer} citationIds={state.chat.citations} onCitationClick={showChunk} />
+        <h3>Citas verificadas</h3><div className={[styles['citations']].filter(Boolean).join(' ')}>{state.chat.citations.length ? state.chat.citations.map(id => <button type="button" key={id} onClick={() => showChunk(id)}>{id}</button>) : <span>Ninguna cita válida.</span>}</div>
         {state.chat.invalid_citations.length > 0 && <p className={[styles['invalid']].filter(Boolean).join(' ')}>Referencias descartadas: {state.chat.invalid_citations.join(', ')}</p>}
         {state.chat.usage && <p className={[styles['usage']].filter(Boolean).join(' ')}>Tokens: {state.chat.usage.input_tokens ?? '—'} entrada · {state.chat.usage.output_tokens ?? '—'} salida · {state.chat.usage.total_tokens ?? '—'} total</p>}
       </> : <Empty text="Genera una respuesta para validar sus referencias contra lo recuperado." />)}

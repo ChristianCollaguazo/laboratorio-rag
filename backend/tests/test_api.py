@@ -7,10 +7,11 @@ from app.main import app
 def test_openapi_describes_each_feature_group():
     tags = {tag["name"]: tag["description"] for tag in app.openapi()["tags"]}
 
-    assert set(tags) == {"status", "documents", "indexing", "query", "learning"}
+    assert set(tags) == {"status", "documents", "indexing", "library", "query", "learning"}
     assert "OpenAI" in tags["status"]
     assert "chunks" in tags["documents"]
     assert "Chroma" in tags["indexing"]
+    assert "vectores" in tags["library"]
     assert "LLM" in tags["query"]
     assert "educativos" in tags["learning"]
 
@@ -54,6 +55,22 @@ def test_app_starts_without_credentials_and_supports_local_preprocessing(tmp_pat
 
         assert client.delete(f"/api/v1/documents/{document_id}").status_code == 204
         assert client.get("/api/status").status_code == 404
+
+
+def test_clear_library_removes_sqlite_records_and_chroma_collections():
+    with TestClient(app) as client:
+        created = client.post(
+            "/api/v1/documents/text",
+            json={"title": "Para borrar", "text": "Contenido local que debe eliminarse."},
+        )
+        assert created.status_code == 201
+
+        cleared = client.delete("/api/v1/library")
+
+        assert cleared.status_code == 204
+        assert client.get("/api/v1/documents").json() == []
+        assert client.get("/api/v1/indices").json() == []
+        assert app.state.container.indexing.vector_store.client.list_collections() == []
 
 
 def test_index_rejects_dimensions_above_the_openai_model_limit():

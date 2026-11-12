@@ -27,6 +27,9 @@ class DocumentRepository:
     def get_chunk_set(self, chunk_set_id: str) -> dict[str, Any] | None:
         return self.catalog.get_chunk_set(chunk_set_id)
 
+    def delete_chunk_sets_for_document(self, document_id: str) -> None:
+        self.catalog.delete_chunk_sets_for_document(document_id)
+
     def delete(self, document_id: str) -> bool:
         return self.catalog.delete_document(document_id)
 
@@ -46,6 +49,9 @@ class IndexRepository:
 
     def delete(self, index_id: str) -> bool:
         return self.catalog.delete_index(index_id)
+
+    def clear_library(self) -> None:
+        self.catalog.clear_library()
 
     def update_contents(
         self, index_id: str, document_ids: list[str], chunk_count: int

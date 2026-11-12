@@ -1,7 +1,13 @@
 import uuid
 from dataclasses import dataclass
 
-from app.core.errors import IndexCompatibilityError, ResourceNotFoundError, ValidationError
+from app.core.errors import (
+    ApplicationError,
+    IndexCompatibilityError,
+    IndexingError,
+    ResourceNotFoundError,
+    ValidationError,
+)
 from app.features.documents.models import ChunkingOptions
 from app.features.documents.service import DocumentService
 from app.infrastructure.chroma.vector_store import ChromaVectorStore
@@ -52,20 +58,6 @@ class IndexingService:
         chunking = ChunkingOptions(chunk_size, chunk_overlap)
         fingerprint = build_fingerprint(embedding, dimension, chunking)
         collection_name = f"rag_{fingerprint}_{uuid.uuid4().hex[:8]}"
-        self.vector_store.create_collection(
-            collection_name,
-            {
-                "hnsw:space": "cosine",
-                "provider": embedding.provider,
-                "model": embedding.model,
-                "dimension": dimension,
-                "chunk_size": chunk_size,
-                "chunk_overlap": chunk_overlap,
-                "fingerprint": fingerprint,
-            },
-            chunks,
-            embedding_model,
-        )
         index = IndexRecord(
             id=f"index_{uuid.uuid4().hex}",
             collection_name=collection_name,
@@ -78,7 +70,31 @@ class IndexingService:
             embedding_sample=probe[:8],
             created_at=self.catalog.now(),
         )
-        self.repository.create(index.to_record())
+        try:
+            self.vector_store.create_collection(
+                collection_name,
+                {
+                    "hnsw:space": "cosine",
+                    "provider": embedding.provider,
+                    "model": embedding.model,
+                    "dimension": dimension,
+                    "chunk_size": chunk_size,
+                    "chunk_overlap": chunk_overlap,
+                    "fingerprint": fingerprint,
+                },
+                chunks,
+                embedding_model,
+            )
+            self.repository.create(index.to_record())
+        except ApplicationError:
+            self.vector_store.delete_collection(collection_name, ignore_missing=True)
+            raise
+        except Exception as error:
+            self.vector_store.delete_collection(collection_name, ignore_missing=True)
+            raise IndexingError(
+                "No se pudo crear el índice local. Vuelve a fragmentar el documento "
+                "e inténtalo otra vez."
+            ) from error
         return index
 
     def list_indices(self) -> list[IndexRecord]:
@@ -107,6 +123,15 @@ class IndexingService:
             return False
         self.vector_store.delete_collection(index.collection_name, ignore_missing=True)
         return self.repository.delete(index_id)
+
+    def clear_library(self) -> None:
+        try:
+            self.vector_store.clear_collections()
+            self.repository.clear_library()
+        except Exception as error:
+            raise IndexingError(
+                "No se pudieron vaciar todos los datos locales. Inténtalo de nuevo."
+            ) from error
 
     def delete_document(self, document_id: str) -> bool:
         if not self.documents.get_document(document_id):

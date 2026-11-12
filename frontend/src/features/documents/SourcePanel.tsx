@@ -9,7 +9,7 @@ export function SourcePanel({ title, text, busy, onTitle, onText, onCreate, onUp
   onUpload: (file: File) => void
 }) {
   return <section>
-    <div className={[styles['section-title']].filter(Boolean).join(' ')}><span>02</span><div><h2>Fuente</h2><p>Pega texto o carga TXT/PDF seleccionable.</p></div></div>
+    <div className={[styles['section-title']].filter(Boolean).join(' ')}><span>02</span><div><h2>Preparar fuente</h2><p>Pega texto o carga TXT/PDF seleccionable.</p></div></div>
     <label>Título<input value={title} onChange={event => onTitle(event.target.value)} /></label>
     <label>Texto<textarea rows={8} placeholder="Pega aquí el contenido que quieres consultar…" value={text} onChange={event => onText(event.target.value)} /></label>
     <button className={[styles['primary']].filter(Boolean).join(' ')} disabled={!title.trim() || !text.trim() || busy} onClick={onCreate}>

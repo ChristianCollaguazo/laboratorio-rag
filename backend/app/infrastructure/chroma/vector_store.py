@@ -28,26 +28,26 @@ class ChromaVectorStore:
         chunks: list[Chunk],
         embeddings: Embeddings,
     ) -> None:
-        store = Chroma(
-            collection_name=collection_name,
-            embedding_function=embeddings,
-            persist_directory=str(self.path),
-            collection_metadata=metadata,
-        )
-        documents = [
-            LangChainDocument(
-                page_content=chunk.text,
-                metadata={
-                    "chunk_id": chunk.id,
-                    "document_id": chunk.document_id,
-                    "document_title": chunk.document_title,
-                    "page": chunk.page,
-                    "position": chunk.position,
-                },
-            )
-            for chunk in chunks
-        ]
         try:
+            store = Chroma(
+                collection_name=collection_name,
+                embedding_function=embeddings,
+                persist_directory=str(self.path),
+                collection_metadata=metadata,
+            )
+            documents = [
+                LangChainDocument(
+                    page_content=chunk.text,
+                    metadata={
+                        "chunk_id": chunk.id,
+                        "document_id": chunk.document_id,
+                        "document_title": chunk.document_title,
+                        "page": chunk.page,
+                        "position": chunk.position,
+                    },
+                )
+                for chunk in chunks
+            ]
             store.add_documents(documents, ids=[chunk.id for chunk in chunks])
         except Exception:
             self.delete_collection(collection_name, ignore_missing=True)
@@ -94,3 +94,9 @@ class ChromaVectorStore:
         except ValueError:
             if not ignore_missing:
                 raise
+
+    def clear_collections(self) -> None:
+        collections = self.client.list_collections()
+        for collection in collections:
+            name = collection.name if hasattr(collection, "name") else str(collection)
+            self.delete_collection(name, ignore_missing=True)

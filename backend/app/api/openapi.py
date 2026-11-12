@@ -21,6 +21,13 @@ OPENAPI_TAGS = [
         ),
     },
     {
+        "name": "library",
+        "description": (
+            "Administra el contenido persistido del laboratorio y permite vaciar de forma "
+            "explícita los documentos, índices y vectores locales."
+        ),
+    },
+    {
         "name": "query",
         "description": (
             "Ejecuta la parte consultable de RAG: vectoriza la pregunta, recupera los chunks "
