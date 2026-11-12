@@ -69,7 +69,7 @@ export default function LearningDeck({ onBack }: { onBack: () => void }) {
   return <div className={[styles['learning-shell']].filter(Boolean).join(' ')}>
     <header className={[styles['learning-topbar']].filter(Boolean).join(' ')}>
       <button className={[styles['back-to-lab']].filter(Boolean).join(' ')} onClick={onBack}>← Volver al laboratorio</button>
-      <div><span className={['eyebrow'].filter(Boolean).join(' ')}>PRESENTACIÓN DIDÁCTICA</span><strong>Aprender RAG</strong></div>
+      <div><span className={styles.eyebrow}>PRESENTACIÓN DIDÁCTICA</span><strong>Aprender RAG</strong></div>
       <span className={[styles['lesson-progress']].filter(Boolean).join(' ')} aria-live="polite">{current + 1} / {slideRegistry.length}</span>
     </header>
     <div className={[styles['learning-layout']].filter(Boolean).join(' ')}>
@@ -89,8 +89,8 @@ export default function LearningDeck({ onBack }: { onBack: () => void }) {
           <button disabled={current === 0} onClick={() => go(current - 1)}>← Anterior</button>
           <span>{slideRegistry[current].title}</span>
           {current < slideRegistry.length - 1
-            ? <button className={['primary'].filter(Boolean).join(' ')} onClick={() => go(current + 1)}>Siguiente →</button>
-            : <button className={['primary'].filter(Boolean).join(' ')} onClick={onBack}>Volver al laboratorio</button>}
+            ? <button className={styles.primary} onClick={() => go(current + 1)}>Siguiente →</button>
+            : <button className={styles.primary} onClick={onBack}>Volver al laboratorio</button>}
         </footer>
       </main>
     </div>

@@ -1,0 +1,30 @@
+.page {
+  min-height: 100vh;
+  display: grid;
+  place-content: center;
+  justify-items: start;
+  gap: 16px;
+  padding: 32px;
+}
+
+.page h1 { margin: 0; font-size: clamp(36px, 6vw, 72px); letter-spacing: -.05em; }
+
+.eyebrow {
+  color: var(--orange);
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: .18em;
+}
+
+.link {
+  padding: 10px 13px;
+  color: white;
+  background: var(--forest);
+  border: 1px solid var(--forest);
+  font-size: 11px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.link:hover { background: #0e3b2a; }
+.link:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }

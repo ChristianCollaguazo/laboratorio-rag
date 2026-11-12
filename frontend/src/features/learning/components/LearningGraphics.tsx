@@ -185,7 +185,7 @@ export function EmbeddingLabGraphic({ query, candidatesText, result, busy, error
     <form onSubmit={onRun}>
       <div className={[styles['lab-fields']].filter(Boolean).join(' ')}><label>Palabra consultada<input aria-label="Palabra consultada" value={query} maxLength={200} onChange={event => onQuery(event.target.value)} /></label>
         <label>Palabras guardadas <span>una por línea</span><textarea aria-label="Palabras candidatas" rows={3} value={candidatesText} onChange={event => onCandidates(event.target.value)} /></label></div>
-      <div className={[styles['openai-lab-warning']].filter(Boolean).join(' ')}><span>↗ OpenAI</span><p>Al ejecutar, estas palabras salen de este Mac hacia OpenAI. La API key permanece en FastAPI.</p><button className={['primary'].filter(Boolean).join(' ')} disabled={busy} type="submit">{busy ? 'Generando…' : 'Generar embeddings reales'}</button></div>
+      <div className={[styles['openai-lab-warning']].filter(Boolean).join(' ')}><span>↗ OpenAI</span><p>Al ejecutar, estas palabras salen de este Mac hacia OpenAI. La API key permanece en FastAPI.</p><button className={styles.primary} disabled={busy} type="submit">{busy ? 'Generando…' : 'Generar embeddings reales'}</button></div>
     </form>
     {error && <div className={[styles['lab-error']].filter(Boolean).join(' ')} role="alert">{error}</div>}
     {!result && !error && <div className={[styles['lab-placeholder']].filter(Boolean).join(' ')}><strong>Lo que observarás</strong><ol><li>OpenAI convierte cada palabra en un vector.</li><li>FastAPI calcula la distancia coseno.</li><li>El vector más cercano aporta un ID.</li><li>El ID permite recuperar el texto original guardado.</li></ol></div>}
