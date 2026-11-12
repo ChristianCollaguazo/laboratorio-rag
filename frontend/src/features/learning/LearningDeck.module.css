@@ -72,6 +72,12 @@
 
 /* 01 · RAG */
 .pipeline-graphic { height: 100%; display: grid; place-content: center; gap: 24px; }
+.rag-definition { display: flex; flex-wrap: wrap; align-items: stretch; justify-content: center; gap: 7px; }
+.rag-definition > strong { display: grid; place-items: center; padding: 9px 12px; color: white; background: var(--forest); font-family: 'DM Mono'; }
+.rag-definition > span { align-self: center; color: var(--orange); font-weight: 700; }
+.rag-definition > div { display: grid; gap: 3px; padding: 8px 10px; text-align: center; background: white; border: 1px solid var(--line); }
+.rag-definition b { font-size: 10px; }
+.rag-definition small { color: var(--muted); font-size: 8px; }
 .closed-book { justify-self: center; width: 145px; padding: 22px; text-align: center; color: white; background: var(--ink); box-shadow: 9px 9px 0 var(--mint); transform: rotate(-2deg); }
 .closed-book span { display: block; font-size: 26px; font-weight: 700; }
 .closed-book small { display: block; margin-top: 5px; color: #b9c7c0; }

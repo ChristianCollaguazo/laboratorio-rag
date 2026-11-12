@@ -79,6 +79,9 @@ export function ConceptSlide({ number, eyebrow, title, lead, analogy, misconcept
 export function PipelineGraphic() {
   const stages = ['Extraer', 'Chunks', 'Embed docs', 'Chroma', 'Embed pregunta', 'Recuperar', 'Contexto', 'Generar', 'Validar']
   return <div className={[styles['pipeline-graphic']].filter(Boolean).join(' ')}>
+    <div className={[styles['rag-definition']].filter(Boolean).join(' ')}>
+      <strong>RAG</strong><span>=</span><div><b>Retrieval</b><small>recuperar</small></div><span>+</span><div><b>Augmented</b><small>aumentar con evidencia</small></div><span>+</span><div><b>Generation</b><small>generar una respuesta</small></div>
+    </div>
     <div className={[styles['closed-book']].filter(Boolean).join(' ')}><span>LLM</span><small>Sin tus documentos</small></div>
     <div className={[styles['pipeline-question']].filter(Boolean).join(' ')}>¿Cómo encuentra RAG información relevante?</div>
     <div className={[styles['pipeline-phases']].filter(Boolean).join(' ')}><span>1 · indexación: preparar el conocimiento</span><span>2 · consulta: buscar y responder</span></div>

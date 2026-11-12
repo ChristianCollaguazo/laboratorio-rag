@@ -11,6 +11,11 @@ describe('Learning deck', () => {
     expect(screen.getByText('1 / 12')).toBeInTheDocument()
     expect(screen.getAllByRole('navigation')[0].querySelectorAll('li')).toHaveLength(12)
     expect(screen.getByRole('heading', { name: 'RAG: responder con el libro abierto' })).toBeInTheDocument()
+    expect(screen.getByText(/RAG son las siglas de Retrieval-Augmented Generation/)).toBeInTheDocument()
+    expect(screen.getByText('generación aumentada por recuperación', { exact: false })).toBeInTheDocument()
+    expect(screen.getByText('Retrieval')).toBeInTheDocument()
+    expect(screen.getByText('Augmented')).toBeInTheDocument()
+    expect(screen.getByText('Generation')).toBeInTheDocument()
 
     document.documentElement.scrollTop = 500
     await user.click(screen.getByRole('button', { name: 'Siguiente →' }))
