@@ -27,9 +27,8 @@ const retrievalCandidates = [
 export function splitForDemo(text: string, chunkSize: number, overlap: number): DemoChunk[] {
   const chunks: DemoChunk[] = []
   let start = 0
-  let safety = 0
 
-  while (start < text.length && safety < 30) {
+  while (start < text.length) {
     let end = Math.min(start + chunkSize, text.length)
     if (end < text.length) {
       const boundary = text.lastIndexOf(' ', end)
@@ -45,7 +44,6 @@ export function splitForDemo(text: string, chunkSize: number, overlap: number): 
     })
     if (end >= text.length) break
     start = Math.max(start + 1, end - overlap)
-    safety += 1
   }
   return chunks
 }

@@ -47,6 +47,25 @@ describe('Learning deck', () => {
     expect(screen.getByText(/RecursiveCharacterTextSplitter/)).toBeInTheDocument()
   })
 
+  it('recalculates more than thirty chunks for long editable documents', async () => {
+    const user = userEvent.setup()
+    render(<LearningDeck onBack={vi.fn()} />)
+    await user.click(screen.getByRole('button', { name: '03 Chunks' }))
+
+    fireEvent.change(screen.getByLabelText('Artículo completo editable'), {
+      target: { value: 'Este fragmento explica recuperación semántica y conserva contexto. '.repeat(150) },
+    })
+    fireEvent.change(screen.getByLabelText('Tamaño del chunk'), { target: { value: '240' } })
+
+    const summary = screen.getByText(/^\d+ chunks$/)
+    const countAt240 = Number(summary.textContent?.split(' ')[0])
+    expect(countAt240).toBeGreaterThan(30)
+
+    fireEvent.change(screen.getByLabelText('Tamaño del chunk'), { target: { value: '300' } })
+    const countAt300 = Number(screen.getByText(/^\d+ chunks$/).textContent?.split(' ')[0])
+    expect(countAt300).toBeLessThan(countAt240)
+  })
+
   it('uses the backend for real embeddings and explains ID-based text recovery', async () => {
     const user = userEvent.setup()
     const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({
