@@ -1,8 +1,10 @@
 import { useState } from 'react'
+import { useQueries } from '@tanstack/react-query'
 import type { LaboratoryController } from '../laboratory/useLaboratoryController'
 import type { LaboratoryTab } from '../laboratory/state'
 import { LlmDeliveryFlow } from '../generation/LlmDeliveryFlow'
 import { MarkdownAnswer } from '../generation/MarkdownAnswer'
+import { api } from '../../shared/api/client'
 import styles from '../laboratory/Laboratory.module.css'
 
 function Empty({ text }: { text: string }) {
@@ -12,6 +14,7 @@ function Empty({ text }: { text: string }) {
 export function PipelineInspector({ controller }: { controller: LaboratoryController }) {
   const { state, patch, activeMutation, mutations } = controller
   const [focusedChunkId, setFocusedChunkId] = useState<string | null>(null)
+  const [retrievalView, setRetrievalView] = useState<'chunks' | 'documents'>('chunks')
   const tabs: [LaboratoryTab, string][] = [
     ['texto', 'texto'], ['chunks', 'chunks'], ['embedding', 'embedding'],
     ['recuperacion', 'recuperación'], ['envio', 'envío LLM'], ['respuesta', 'respuesta'],
@@ -26,6 +29,16 @@ export function PipelineInspector({ controller }: { controller: LaboratoryContro
       }
     }, 0)
   }
+  const sourceDocumentIds = [...new Set(state.retrieval?.chunks.map(chunk => chunk.document_id) ?? [])]
+  const sourceDocumentQueries = useQueries({
+    queries: sourceDocumentIds.map(documentId => ({
+      queryKey: ['documents', documentId],
+      queryFn: () => api.document(documentId),
+      enabled: retrievalView === 'documents',
+    })),
+  })
+  const loadingSourceDocuments = sourceDocumentQueries.some(query => query.isLoading)
+  const sourceDocumentError = sourceDocumentQueries.find(query => query.isError)?.error
   return <section className={[styles['inspector']].filter(Boolean).join(' ')}>
     <nav className={[styles['tabs']].filter(Boolean).join(' ')} aria-label="Resultados del pipeline">
       {tabs.map(([item, label]) => <button key={item} className={state.tab === item ? styles.active : ''} onClick={() => patch({ tab: item })}>{label}</button>)}
@@ -48,7 +61,15 @@ export function PipelineInspector({ controller }: { controller: LaboratoryContro
       {state.tab === 'recuperacion' && (state.retrieval ? <>
         <div className={[styles['panel-heading']].filter(Boolean).join(' ')}><div><span className={[styles['kind']].filter(Boolean).join(' ')}>top {state.topK}</span><h2>Fragmentos recuperados</h2></div><span>{state.retrieval.elapsed_ms.toFixed(1)} ms</span></div>
         <p className={[styles['explanation']].filter(Boolean).join(' ')}>La distancia coseno mide separación: menor suele significar mayor cercanía. No es una probabilidad.</p>
-        <div className={[styles['chunk-list']].filter(Boolean).join(' ')}>{state.retrieval.chunks.map(chunk => <article id={`chunk-${chunk.id}`} key={chunk.id} className={[styles['chunk-card'], styles['retrieved'], focusedChunkId === chunk.id ? styles.focused : ''].filter(Boolean).join(' ')}><header><code>{chunk.id}</code><strong>{chunk.distance.toFixed(4)}</strong></header><p>{chunk.text}</p></article>)}</div>
+        <div className={styles['source-switch']} role="group" aria-label="Vista de fuentes recuperadas">
+          <button className={retrievalView === 'chunks' ? styles.active : ''} onClick={() => setRetrievalView('chunks')}>Chunks recuperados</button>
+          <button className={retrievalView === 'documents' ? styles.active : ''} onClick={() => setRetrievalView('documents')}>Documentos fuente (SQLite)</button>
+        </div>
+        {retrievalView === 'chunks' ? <div className={[styles['chunk-list']].filter(Boolean).join(' ')}>{state.retrieval.chunks.map(chunk => <article id={`chunk-${chunk.id}`} key={chunk.id} className={[styles['chunk-card'], styles['retrieved'], focusedChunkId === chunk.id ? styles.focused : ''].filter(Boolean).join(' ')}><header><code>{chunk.id}</code><strong>{chunk.distance.toFixed(4)}</strong></header><p>{chunk.text}</p></article>)}</div> : <div className={styles['source-documents']}>
+          {loadingSourceDocuments && <p className={styles.muted}>Cargando documentos desde SQLite…</p>}
+          {sourceDocumentError && <p className={styles.invalid}>No se pudo cargar el documento fuente desde SQLite.</p>}
+          {sourceDocumentQueries.map(query => query.data && <article className={styles['source-document']} key={query.data.id}><header><span className={styles.kind}>Documento fuente · SQLite</span><code>{query.data.id}</code></header><h3>{query.data.title}</h3><p className={styles.muted}>{query.data.kind} · {query.data.text.length.toLocaleString()} caracteres · {query.data.pages.length} pág.</p><pre className={styles.extracted}>{query.data.text}</pre></article>)}
+        </div>}
       </> : <Empty text="Escribe una pregunta y ejecuta recuperación para comparar distancias." />)}
       {state.tab === 'envio' && (state.retrieval ? <LlmDeliveryFlow retrieval={state.retrieval} generation={state.chat?.generation ?? state.generation} embedding={state.embedding} topK={state.topK} chat={state.chat} /> : <Empty text="Ejecuta la recuperación para preparar y visualizar el payload del LLM antes de enviarlo." />)}
       {state.tab === 'respuesta' && (state.chat ? <>

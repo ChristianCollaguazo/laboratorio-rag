@@ -143,6 +143,10 @@ describe('RAG Lab', () => {
       const path = String(input)
       let data: unknown = []
       if (path.endsWith('/status')) data = status
+      else if (path.endsWith('/documents/doc_ecuador')) data = {
+        id: 'doc_ecuador', title: 'Ecuador', kind: 'text', text: 'Quito es la capital del Ecuador.',
+        pages: [{ page: 1, text: 'Quito es la capital del Ecuador.' }], created_at: '2026-11-04T00:00:00Z',
+      }
       else if (path.endsWith('/indices') && !init?.method) data = [index]
       else if (path.endsWith('/retrieve')) data = retrieval
       else if (path.endsWith('/chat')) data = chat
@@ -179,6 +183,9 @@ describe('RAG Lab', () => {
     await user.click(screen.getAllByRole('button', { name: 'doc_ecuador:p1:c000' })[0])
     expect(screen.getByRole('heading', { name: 'Fragmentos recuperados' })).toBeInTheDocument()
     expect(screen.getByText('Quito es la capital del Ecuador.')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Documentos fuente (SQLite)' }))
+    expect(await screen.findByText('Documento fuente · SQLite')).toBeInTheDocument()
+    expect(screen.getByText('Ecuador')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'envío LLM' }))
 

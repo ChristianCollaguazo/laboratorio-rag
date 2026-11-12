@@ -44,6 +44,7 @@ const json = (body: unknown): RequestInit => ({
 export const api = {
   status: () => request<Status>('/api/v1/status'),
   documents: () => request<DocumentView[]>('/api/v1/documents'),
+  document: (id: string) => request<DocumentView>(`/api/v1/documents/${id}`),
   indices: () => request<IndexView[]>('/api/v1/indices'),
   createText: (title: string, text: string) =>
     request<DocumentView>('/api/v1/documents/text', json({ title, text })),

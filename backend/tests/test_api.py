@@ -35,6 +35,10 @@ def test_app_starts_without_credentials_and_supports_local_preprocessing(tmp_pat
         assert created.status_code == 201
         document_id = created.json()["id"]
 
+        fetched = client.get(f"/api/v1/documents/{document_id}")
+        assert fetched.status_code == 200
+        assert fetched.json()["text"] == "Un texto suficientemente claro para dividir."
+
         chunks = client.post(
             f"/api/v1/documents/{document_id}/chunks",
             json={"chunk_size": 100, "chunk_overlap": 20},

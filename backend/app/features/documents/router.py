@@ -14,6 +14,14 @@ def list_documents(container: Annotated[ApplicationContainer, Depends(get_contai
     return [DocumentView.from_domain(item) for item in container.documents.list_documents()]
 
 
+@router.get("/{document_id}", response_model=DocumentView)
+def get_document(document_id: str, container: Annotated[ApplicationContainer, Depends(get_container)]) -> DocumentView:
+    document = container.documents.get_document(document_id)
+    if not document:
+        raise HTTPException(status_code=404, detail="Documento no encontrado.")
+    return DocumentView.from_domain(document)
+
+
 @router.post("/text", response_model=DocumentView, status_code=201)
 def create_text_document(request: TextDocumentRequest, container: Annotated[ApplicationContainer, Depends(get_container)]) -> DocumentView:
     return DocumentView.from_domain(container.documents.create_text(request.title, request.text))
