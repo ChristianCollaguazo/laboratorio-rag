@@ -2,7 +2,7 @@ import { ConceptSlide, EmbeddingGraphic } from '../components/LearningGraphics'
 import type { LearningSlideProps } from './types'
 
 export function EmbeddingsSlide(_props: LearningSlideProps) {
-  return <ConceptSlide number={4} eyebrow="representación" title="Un embedding convierte significado en coordenadas"
+  return <ConceptSlide number={3} eyebrow="representación" title="Un embedding convierte significado en coordenadas"
     lead="Un modelo de embeddings es una red neuronal entrenada para recibir texto y devolver una lista de números que permita comparar su significado con otros textos."
     analogy="Es asignar una dirección semántica: textos que hablan de ideas parecidas reciben direcciones cercanas, aunque usen palabras distintas."
     misconception="Vectorizar tus documentos no entrena el modelo ni los incorpora a su memoria. El modelo de embeddings tampoco contesta preguntas, resume chunks o asigna una etiqueta interpretable a cada coordenada."

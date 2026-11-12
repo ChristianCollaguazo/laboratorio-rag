@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useReducer, type Dispatch, type ReactNode } from 'react'
 import type { ChatResult, ChunkSet, DocumentView, IndexView, ProviderConfig, Retrieval } from '../../shared/api/contracts'
+import { normalizeEmbeddingConfig } from '../../shared/embeddingModels'
 
 export type LaboratoryTab = 'texto' | 'chunks' | 'embedding' | 'recuperacion' | 'envio' | 'respuesta'
 
@@ -39,7 +40,7 @@ function createInitialState(): LaboratoryState {
     document: null, chunkSet: null, index: null, retrieval: null, chat: null,
     title: 'Notas de ejemplo', text: '', question: '', chunkSize: 800, overlap: 120,
     topK: 4, tab: 'texto', notice: '',
-    embedding: loadPreference('rag.embedding', defaultEmbedding),
+    embedding: normalizeEmbeddingConfig(loadPreference('rag.embedding', defaultEmbedding)),
     generation: loadPreference('rag.generation', defaultGeneration),
   }
 }

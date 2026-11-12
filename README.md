@@ -11,7 +11,7 @@ Una aplicación para observar y aprender un flujo RAG completo sin esconderlo de
 - Texto pegado, TXT UTF-8 y PDF con texto seleccionable. No hay OCR.
 - Proveedores de embeddings y generación configurables por separado.
 - Vista del texto, chunks, muestra vectorial, resultados, distancias, payload exacto enviado al LLM, respuesta, citas y tokens.
-- Presentación independiente **Aprender RAG** con doce conceptos, diagramas, simulaciones locales y un laboratorio opcional de embeddings reales.
+- Presentación independiente **Aprender RAG** con nueve secciones jerárquicas, diagramas, simulaciones locales y un laboratorio opcional de embeddings reales.
 - Sin autenticación, Docker, almacenamiento cloud ni fallback automático entre proveedores.
 
 ## Arquitectura

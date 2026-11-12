@@ -91,6 +91,9 @@ export default function LearningDeck({ onBack }: { onBack: () => void }) {
       </nav>
       <main className={[styles['lesson-stage']].filter(Boolean).join(' ')}>
         <div className={[styles['progress-track']].filter(Boolean).join(' ')}><span style={{ width: `${((current + 1) / slideRegistry.length) * 100}%` }} /></div>
+        <ol className={[styles['section-outline']].filter(Boolean).join(' ')} aria-label={`Subsecciones de ${slideRegistry[current].title}`}>
+          {slideRegistry[current].topics.map((topic, index) => <li key={topic}><span>{current + 1}.{index + 1}</span>{topic}</li>)}
+        </ol>
         <div key={current} className={[styles['slide-enter']].filter(Boolean).join(' ')}><CurrentSlide {...slideProps} /></div>
         <footer className={[styles['lesson-controls']].filter(Boolean).join(' ')}>
           <button disabled={current === 0} onClick={() => go(current - 1)}>← Anterior</button>

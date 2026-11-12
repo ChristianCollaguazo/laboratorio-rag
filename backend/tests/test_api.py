@@ -54,3 +54,21 @@ def test_app_starts_without_credentials_and_supports_local_preprocessing(tmp_pat
 
         assert client.delete(f"/api/v1/documents/{document_id}").status_code == 204
         assert client.get("/api/status").status_code == 404
+
+
+def test_index_rejects_dimensions_above_the_openai_model_limit():
+    with TestClient(app) as client:
+        response = client.post(
+            "/api/v1/indices",
+            json={
+                "chunk_set_ids": ["not_used"],
+                "embedding": {
+                    "provider": "openai",
+                    "model": "text-embedding-3-small",
+                    "dimensions": 1588,
+                },
+            },
+        )
+
+    assert response.status_code == 422
+    assert "máximo 1536" in str(response.json()["detail"])

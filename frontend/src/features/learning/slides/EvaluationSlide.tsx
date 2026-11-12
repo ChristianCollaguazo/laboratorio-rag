@@ -2,7 +2,7 @@ import { ConceptSlide, EvaluationGraphic } from '../components/LearningGraphics'
 import type { LearningSlideProps } from './types'
 
 export function EvaluationSlide(_props: LearningSlideProps) {
-  return <ConceptSlide number={12} eyebrow="calidad" title="Evaluar RAG: medir cada etapa antes de mejorarla"
+  return <ConceptSlide number={9} eyebrow="calidad y operación" title="Evaluar RAG: medir cada etapa antes de mejorarla"
     lead="Una demo convincente no demuestra que el sistema funcione bien en preguntas distintas. La evaluación usa casos repetibles para medir recuperación, generación, citas, latencia y costo por separado."
     analogy="Es revisar una línea de producción: si el resultado final falla, primero identificas en qué estación apareció el defecto antes de cambiar toda la fábrica."
     misconception="No existe una única puntuación que garantice un buen RAG. Mejorar la fluidez de la respuesta no arregla una recuperación deficiente, y aumentar top_k puede añadir ruido y costo."

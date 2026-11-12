@@ -2,9 +2,9 @@ import { ConceptSlide, RetrievalGraphic } from '../components/LearningGraphics'
 import type { LearningSlideProps } from './types'
 
 export function RetrievalSlide(props: LearningSlideProps) {
-  return <ConceptSlide number={8} eyebrow="búsqueda" title="Recuperar es convertir la pregunta y ordenar candidatos"
-    lead="La pregunta pasa por el mismo modelo de embeddings. Chroma consulta el índice para encontrar los vecinos más cercanos, los ordena por distancia y top_k decide cuántos pasan al contexto."
+  return <ConceptSlide number={6} eyebrow="búsqueda" title="Recuperar: vectorizar la pregunta para comparar"
+    lead="Los chunks ya están guardados como vectores. Para compararlos semánticamente, la pregunta debe pasar por el mismo modelo y convertirse en un vector temporal dentro del mismo espacio."
     analogy="Es pedir a la biblioteca que ordene todas las fichas por cercanía temática y luego decir: “tráeme las primeras k”. Si k vale 2, llevas dos fichas a la mesa."
-    misconception="top_k no es un porcentaje ni un mínimo de calidad. Aunque un resultado sea lejano, entrará si está entre los primeros k. Recuperar candidatos tampoco significa que la pregunta ya esté respondida."
-    technical={<><p>El ranking se ordena por distancia coseno ascendente y conserva los primeros <code>k</code>.</p><ul><li><strong>Cobertura:</strong> traer suficiente evidencia relevante.</li><li><strong>Precisión:</strong> evitar chunks irrelevantes o ruido.</li><li>Conceptualmente se comparan vectores; para escalar, una base vectorial suele usar búsqueda aproximada de vecinos —ANN— en vez de recorrerlos todos uno por uno.</li><li>Filtros, umbrales, reranking y búsqueda híbrida pueden mejorar el ranking; no forman parte de la POC básica.</li></ul></>}><RetrievalGraphic topK={props.topK} onTopK={props.setTopK} /></ConceptSlide>
+    misconception="No se vectoriza la respuesta del LLM para responder esta pregunta. Se vectorizan documentos y consulta para buscarlos; la salida de recuperación son candidatos, todavía no una respuesta. top_k tampoco es un porcentaje ni un mínimo de calidad."
+    technical={<><p>El mismo modelo y dimensión hacen comparables ambos lados: vector de consulta y vectores del índice. El vector de consulta se usa para buscar y no necesita guardarse.</p><ul><li>El ranking se ordena por distancia coseno ascendente y conserva los primeros <code>k</code>.</li><li><strong>Cobertura:</strong> traer suficiente evidencia relevante.</li><li><strong>Precisión:</strong> evitar chunks irrelevantes o ruido.</li><li>ANN, filtros, umbrales, reranking y búsqueda híbrida son extensiones avanzadas, no parte del flujo básico.</li></ul></>}><RetrievalGraphic topK={props.topK} onTopK={props.setTopK} /></ConceptSlide>
 }

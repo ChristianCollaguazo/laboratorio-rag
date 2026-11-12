@@ -24,9 +24,9 @@ una respuesta y finalmente se indica de qué páginas salió la información.
 El flujo completo es:
 
 ```text
-Extraer → fragmentar → crear embeddings → almacenar →
-convertir la pregunta en embedding → recuperar → construir contexto →
-enviar mensajes al LLM → generar → validar citas → evaluar
+Extraer → fragmentar → vectorizar documentos → indexar →
+vectorizar la pregunta → recuperar → construir mensajes →
+generar → validar citas → evaluar
 ```
 
 RAG tiene dos grandes fases:
@@ -40,9 +40,37 @@ RAG no reentrena al modelo, no introduce permanentemente los documentos en su
 memoria y no garantiza por sí solo que una respuesta sea verdadera. Le entrega
 evidencia concreta para una consulta concreta.
 
+Esta presentación se organiza en nueve secciones: LLM y RAG; documentos y
+chunks; modelo de embeddings; vectores y similitud; indexación y base
+vectorial; recuperación; contexto y mensajes; generación y validación; y
+evaluación, operación y privacidad. Cada sección responde qué entra, por qué se
+transforma y qué sale para la etapa siguiente.
+
 ---
 
-## 1. Documento y extracción
+## 1. LLM y RAG
+
+Un **LLM**, por *Large Language Model* o modelo de lenguaje grande, es un modelo
+entrenado previamente para procesar texto y predecir la siguiente unidad de
+texto, llamada **token**. Al responder, no busca páginas ni consulta una base de
+datos: genera una continuación condicionada por los mensajes que recibe.
+
+Es importante distinguir dos momentos. Durante el **entrenamiento**, el creador
+del modelo ajusta sus parámetros con grandes conjuntos de datos. Durante la
+**inferencia**, como en esta POC, el modelo usa esos parámetros ya aprendidos
+para leer instrucciones, una pregunta y fuentes. Enviar un documento no lo
+entrena ni lo agrega permanentemente a sus parámetros.
+
+Un LLM tiene una **ventana de contexto**: un límite de tokens que puede recibir
+en una solicitud. RAG aprovecha esa ventana para incluir solo la evidencia más
+relevante. También puede generar texto plausible que no está respaldado; por
+eso RAG necesita fuentes y validación posterior.
+
+---
+
+## 2. Documentos, extracción y chunks
+
+### 2.1 Documento y extracción
 
 Antes de buscar significado, el sistema necesita convertir la entrada en texto
 procesable. Esa entrada puede ser texto pegado, un archivo TXT o un PDF con
@@ -76,7 +104,7 @@ Si la extracción omite información, ninguna etapa posterior podrá recuperarla
 
 ---
 
-## 2. Chunks: fragmentos manejables
+### 2.2 Chunks: fragmentos manejables
 
 Un **chunk** es una porción de un documento que puede indexarse y recuperarse de
 forma independiente.
@@ -120,7 +148,7 @@ palabras completas, partes de palabras o signos.
 
 ---
 
-## 3. Qué es un modelo de embeddings
+## 3. Modelo de embeddings
 
 Un **modelo de embeddings** es una red neuronal que recibe texto y devuelve una
 lista de números de tamaño fijo. Esa lista se llama **vector**.
@@ -144,7 +172,7 @@ Las coordenadas individuales no tienen etiquetas legibles como “tema”,
 “sentimiento” o “recuperación”. El significado se distribuye entre muchas
 dimensiones y se interpreta mediante relaciones geométricas.
 
-### Diferencia entre embedding y generación
+### 3.1 Diferencia entre embedding y generación
 
 - El **modelo de embeddings** representa texto como números para comparar y
   buscar.
@@ -153,7 +181,7 @@ dimensiones y se interpreta mediante relaciones geométricas.
 El modelo de embeddings no contesta preguntas, no resume el chunk y no guarda
 el documento en su memoria.
 
-### Cómo se entrena un modelo de embeddings
+### 3.2 Cómo se entrena un modelo de embeddings
 
 Una técnica habitual es el aprendizaje por contraste:
 
@@ -161,15 +189,19 @@ Una técnica habitual es el aprendizaje por contraste:
 - Un par no relacionado, como “automóvil” y “receta de cocina”, debería quedar
   lejos.
 
-El entrenamiento puede resumirse así:
+El objetivo no es guardar una regla literal como “automóvil = coche”, sino
+ajustar una función que convierta relaciones de significado en posiciones. El
+entrenamiento puede resumirse así:
 
-1. **Tokenizar:** dividir el texto en unidades que la red pueda procesar.
-2. **Codificar:** producir un vector con los pesos actuales de la red.
-3. **Medir el error:** penalizar ejemplos relacionados que quedaron lejos y
+1. **Mostrar relaciones:** presentar textos con una relación conocida, ya sea
+   relacionada o distinta.
+2. **Representar:** tokenizar y codificar cada texto con los pesos actuales
+   para producir sus vectores.
+3. **Comparar con la meta:** penalizar ejemplos relacionados que quedaron lejos y
    ejemplos distintos que quedaron demasiado cerca.
-4. **Ajustar los pesos:** usar backpropagation y un optimizador para reducir el
-   error.
-5. Repetir el ciclo con grandes conjuntos de ejemplos.
+4. **Corregir la red:** usar backpropagation y un optimizador para modificar
+   los parámetros de modo que el siguiente intento reduzca ese error.
+5. Repetir el ciclo con grandes conjuntos de relaciones.
 
 El entrenamiento aprende los parámetros del modelo. La **inferencia**, que es
 lo que hace esta POC, solo aplica esos parámetros para calcular vectores nuevos.
@@ -181,7 +213,7 @@ embeddings. Cambiar el modelo o la dimensión obliga a reindexar. Cambiar
 
 ---
 
-## 4. El vector no se convierte de vuelta en texto
+### 3.3 El vector no se convierte de vuelta en texto
 
 Un punto importante es que el embedding no se “decodifica” para recuperar la
 frase original. La aplicación guarda explícitamente la relación entre:
@@ -202,7 +234,7 @@ sí solo no es una representación reversible del texto.
 
 ---
 
-## 5. Vectores y distancia coseno
+## 4. Vectores y similitud
 
 Una vez que los chunks y la pregunta están representados como vectores, el
 sistema necesita medir su cercanía.
@@ -210,7 +242,7 @@ sistema necesita medir su cercanía.
 La **similitud coseno** compara la orientación de dos vectores. La **distancia
 coseno** utilizada en este ejemplo se define como uno menos la similitud.
 
-### Ejemplo visual en dos dimensiones
+### 4.1 Ejemplo visual en dos dimensiones
 
 Sean:
 
@@ -251,7 +283,7 @@ d_cos(A,B) = 1 - 0.7071 = 0.2929
 
 La distancia compara el ángulo, no la longitud de las flechas.
 
-### Fórmula para n dimensiones
+### 4.2 Fórmula para n dimensiones
 
 Producto punto, leído “A punto B”:
 
@@ -297,9 +329,26 @@ para ordenar candidatos dentro del mismo modelo, métrica e índice. Un valor
 menor suele representar mayor cercanía semántica respecto a los demás, pero no
 demuestra que el texto sea correcto o suficiente.
 
+### 4.3 Laboratorio: del vecino al texto
+
+En el laboratorio interactivo se envían una consulta y varios textos candidatos
+al modelo de embeddings seleccionado. FastAPI calcula sus distancias y muestra
+el ranking. El resultado más cercano entrega un ID; ese ID recupera el texto
+original asociado. No se intenta reconstruir una frase desde los números del
+vector.
+
+El ejemplo puede comparar español e inglés porque el modelo usado es
+multilingüe. La calidad de esa cercanía depende del modelo y del dominio; no
+implica que el sistema traduzca cada texto de forma literal.
+
 ---
 
-## 6. Base de datos vectorial y Chroma
+## 5. Indexación y base de datos vectorial
+
+**Indexar** significa preparar una estructura de búsqueda: para cada chunk se
+conservan un vector, un ID, el texto y sus metadatos. El resultado es un
+**índice vectorial**, un conjunto de vectores compatibles que puede consultarse
+después. No es el documento original ni el modelo de embeddings.
 
 Una **base de datos vectorial** es un sistema que almacena vectores y permite
 encontrar cuáles están más cerca del vector de una consulta. También conserva
@@ -325,7 +374,7 @@ Chroma no crea embeddings y no redacta respuestas. El modelo de embeddings
 produce los vectores; Chroma los guarda, busca vecinos cercanos y devuelve IDs,
 textos, metadatos y distancias.
 
-### Alcance de un índice
+### 5.1 Alcance de un índice
 
 Una colección puede contener chunks de uno o varios documentos. Si el índice
 incluye documentos A, B y C, la pregunta se compara con los chunks de los tres,
@@ -335,7 +384,7 @@ utilizarse para aplicar filtros cuando se necesita limitar el alcance.
 El modelo, la dimensión y la configuración de chunking forman parte de la
 identidad del índice. Mezclar embeddings incompatibles invalida la comparación.
 
-### Responsabilidad de Chroma y SQLite en esta POC
+### 5.2 Responsabilidad de Chroma y SQLite en esta POC
 
 **Chroma:**
 
@@ -356,10 +405,26 @@ matemática; SQLite funciona como catálogo inspeccionable.
 
 ---
 
-## 7. Recuperación y top_k
+## 6. Recuperación: por qué se vectoriza la pregunta
 
 Cuando llega una pregunta, el sistema utiliza exactamente el mismo modelo de
 embeddings empleado para los documentos. El resultado es un vector de consulta.
+
+Esto es necesario porque los chunks del índice ya son vectores. No existe una
+distancia coseno entre una frase escrita y una lista de números: primero ambos
+elementos deben estar en el mismo espacio vectorial. El mismo modelo y la misma
+dimensión hacen comparable el vector temporal de la pregunta con los vectores
+persistidos de los chunks.
+
+```text
+Pregunta en texto → mismo modelo de embeddings → vector de consulta
+vector de consulta ↔ vectores de chunks → distancia coseno → ranking
+```
+
+La respuesta del LLM no se vectoriza en el flujo RAG básico. La vectorización
+sirve para buscar evidencia antes de generar; la respuesta final es texto que
+se muestra y cuyas citas se validan. El vector de consulta normalmente tampoco
+se guarda: se calcula para esa búsqueda y luego se descarta.
 
 Chroma compara ese vector con el índice y ordena los chunks por distancia. Los
 resultados son candidatos recuperados, todavía no una respuesta.
@@ -391,7 +456,9 @@ parte del flujo básico de esta POC.
 
 ---
 
-## 8. Construcción del contexto
+## 7. Contexto y mensajes para el LLM
+
+### 7.1 Construcción del contexto
 
 El LLM no abre Chroma ni ejecuta búsquedas. El backend recibe los chunks
 recuperados y construye con ellos un texto delimitado.
@@ -426,7 +493,7 @@ siempre mejora la respuesta: también puede diluir la evidencia relevante.
 
 ---
 
-## 9. System prompt y solicitud enviada al LLM
+### 7.2 System prompt y solicitud enviada al LLM
 
 El backend reúne instrucciones, pregunta y fuentes en una sola solicitud. La
 solicitud contiene mensajes con roles distintos.
@@ -483,7 +550,7 @@ de prompt injection, pero no constituye una defensa completa para producción.
 
 ---
 
-## 10. Generación y validación de citas
+## 8. Generación y validación de citas
 
 El LLM recibe el system prompt, la pregunta y las fuentes. Después genera la
 respuesta token por token, estimando posibles continuaciones según los mensajes
@@ -523,7 +590,7 @@ Una cita con ID válido no demuestra por sí sola que toda la frase sea correcta
 
 ---
 
-## 11. Evaluación de un sistema RAG
+## 9. Evaluación, operación y privacidad
 
 Una demostración convincente no prueba que el sistema vaya a funcionar bien con
 preguntas diferentes. La evaluación necesita casos repetibles.
@@ -544,20 +611,31 @@ Debe citar: c003
 Si falta evidencia: debe reconocerlo
 ```
 
-### Métricas de recuperación
+### 9.1 Métricas de recuperación
 
 - **Hit@k:** indica si al menos una fuente esperada apareció entre los primeros
   `k` resultados.
 - **Recall@k:** proporción de todas las fuentes relevantes que fue recuperada.
 - **Precision@k:** proporción de los `k` resultados que realmente era útil.
 
-### Evaluación de generación
+Ejemplo calculado:
+
+```text
+Fuentes relevantes: {A, B}
+Resultados top 3:   {A, C, D}
+
+Hit@3       = 1          apareció al menos una fuente esperada
+Recall@3    = 1/2 = 0.50 recuperamos una de las dos fuentes relevantes
+Precision@3 = 1/3 ≈ 0.33 uno de los tres resultados era relevante
+```
+
+### 9.2 Evaluación de generación
 
 - **Fidelidad:** cada afirmación debe estar respaldada por las fuentes.
 - **Relevancia:** la respuesta debe atender la pregunta sin desviarse.
 - **Citas:** los IDs deben ser válidos y respaldar la frase correspondiente.
 
-### Evaluación operativa
+### 9.3 Evaluación operativa
 
 - **Latencia:** tiempo de extracción, embeddings, recuperación y generación.
 - **Tokens y costo:** volumen de entrada, salida y llamadas realizadas.
@@ -576,6 +654,14 @@ Para diagnosticar fallos:
 - Si la respuesta cita un ID desconocido, rechazarlo durante la validación; no
   intentar resolverlo modificando Chroma.
 
+### 9.4 Privacidad y operación
+
+Con OpenAI, los textos necesarios para crear embeddings o generar una respuesta
+salen del equipo hacia la API. Con Ollama, ambas operaciones pueden mantenerse
+locales. Embeddings y generación se configuran de forma independiente, y la API
+key permanece en FastAPI: nunca forma parte del navegador ni del payload que ve
+el usuario.
+
 El ciclo de mejora debe ser:
 
 ```text
@@ -584,7 +670,7 @@ Medir → cambiar una variable → repetir los mismos casos → comparar
 
 ---
 
-## 12. Caso continuo: del artículo a una cita validada
+### 9.5 Caso continuo: del artículo a una cita validada
 
 El siguiente miniartículo resume el caso utilizado durante toda la explicación:
 
@@ -645,6 +731,8 @@ Recorrido del ejemplo:
    diferentes.
 10. Un sistema RAG debe evaluarse por etapas: recuperación, generación y
     operación.
+11. Se vectoriza la pregunta para compararla con los chunks vectorizados; la
+    respuesta final se genera como texto.
 
 ## Glosario breve
 

@@ -75,12 +75,13 @@ export function ConceptSlide({ number, eyebrow, title, lead, analogy, misconcept
 }
 
 export function PipelineGraphic() {
-  const stages = ['Extraer', 'Chunks', 'Embed docs', 'Chroma', 'Embed pregunta', 'Recuperar', 'Contexto', 'Generar', 'Validar']
+  const stages = ['Extraer', 'Fragmentar', 'Vectorizar docs', 'Indexar', 'Vectorizar pregunta', 'Recuperar', 'Construir mensaje', 'Generar', 'Validar']
   return <div className={[styles['pipeline-graphic']].filter(Boolean).join(' ')}>
     <div className={[styles['rag-definition']].filter(Boolean).join(' ')}>
       <strong>RAG</strong><span>=</span><div><b>Retrieval</b><small>recuperar</small></div><span>+</span><div><b>Augmented</b><small>aumentar con evidencia</small></div><span>+</span><div><b>Generation</b><small>generar una respuesta</small></div>
     </div>
     <div className={[styles['closed-book']].filter(Boolean).join(' ')}><span>LLM</span><small>Sin tus documentos</small></div>
+    <div className={[styles['llm-explainer']].filter(Boolean).join(' ')}><strong>¿Qué es un LLM?</strong><span>Un modelo de lenguaje grande: procesa tokens y predice el siguiente token. No es una base de datos ni ejecuta la búsqueda por sí solo.</span></div>
     <div className={[styles['pipeline-question']].filter(Boolean).join(' ')}>¿Cómo encuentra RAG información relevante?</div>
     <div className={[styles['pipeline-phases']].filter(Boolean).join(' ')}><span>1 · indexación: preparar el conocimiento</span><span>2 · consulta: buscar y responder</span></div>
     <ol>{stages.map((stage, index) => <li key={stage}><span>{index + 1}</span><strong>{stage}</strong></li>)}</ol>
@@ -152,18 +153,19 @@ export function EmbeddingGraphic() {
       <p>Es una <strong>red neuronal</strong> con parámetros —números internos aprendidos— que transforma una secuencia de tokens en un vector de tamaño fijo. El modelo no guarda una definición legible en cada coordenada: aprende una función que coloca usos semánticamente relacionados en direcciones cercanas.</p>
     </section>
     <section className={[styles['embedding-training']].filter(Boolean).join(' ')} aria-labelledby="embedding-training-title">
-      <header><span>Una forma habitual de entrenarlo</span><strong id="embedding-training-title">Aprender por contraste: acercar relacionados y separar distintos</strong></header>
+      <header><span>Una forma habitual de entrenarlo</span><strong id="embedding-training-title">Aprender por contraste: convertir relaciones de significado en posiciones</strong></header>
+      <p className={[styles['training-goal']].filter(Boolean).join(' ')}><strong>Objetivo:</strong> ajustar la red para que textos con una relación conocida queden cerca en el espacio vectorial y textos no relacionados queden separados. El modelo aprende el patrón; no memoriza una regla como “automóvil = coche”.</p>
       <div className={[styles['training-examples']].filter(Boolean).join(' ')}>
         <article className={[styles['positive-pair']].filter(Boolean).join(' ')}><span>par relacionado</span><div><q>automóvil</q><b>↔</b><q>coche</q></div><small>deberían quedar cerca</small></article>
         <article className={[styles['negative-pair']].filter(Boolean).join(' ')}><span>par no relacionado</span><div><q>automóvil</q><b>↮</b><q>receta de cocina</q></div><small>deberían quedar lejos</small></article>
       </div>
       <ol className={[styles['training-steps']].filter(Boolean).join(' ')}>
-        <li><span>1</span><div><strong>Tokenizar</strong><small>El texto se divide en unidades que la red puede procesar.</small></div></li>
-        <li><span>2</span><div><strong>Codificar</strong><small>La red produce un vector para cada texto usando sus pesos actuales.</small></div></li>
-        <li><span>3</span><div><strong>Medir el error</strong><small>Una función de pérdida penaliza pares relacionados lejanos y pares distintos demasiado cercanos.</small></div></li>
-        <li><span>4</span><div><strong>Ajustar los pesos</strong><small>Backpropagation y un optimizador modifican los parámetros para reducir ese error.</small></div></li>
+        <li><span>1</span><div><strong>Mostrar relaciones</strong><small>Se presentan textos con una relación conocida: similares o distintos.</small></div></li>
+        <li><span>2</span><div><strong>Representar</strong><small>La red tokeniza y codifica cada texto con sus pesos actuales para producir vectores.</small></div></li>
+        <li><span>3</span><div><strong>Comparar con la meta</strong><small>La función de pérdida penaliza relacionados lejanos y distintos demasiado cercanos.</small></div></li>
+        <li><span>4</span><div><strong>Corregir la red</strong><small>Backpropagation y un optimizador ajustan los parámetros para que el siguiente intento mejore.</small></div></li>
       </ol>
-      <div className={[styles['training-loop']].filter(Boolean).join(' ')}><span>miles o millones de ejemplos</span><b>entrenar → medir → ajustar → repetir</b><span>pesos aprendidos</span></div>
+      <div className={[styles['training-loop']].filter(Boolean).join(' ')}><span>miles o millones de relaciones</span><b>representar → comparar → corregir → repetir</b><span>función de texto → vector aprendida</span></div>
     </section>
     <section className={[styles['training-vs-inference']].filter(Boolean).join(' ')} aria-label="Diferencia entre entrenamiento e inferencia">
       <article><span>Entrenamiento</span><strong>Aprende los pesos</strong><p>Lo realiza el creador del modelo con grandes conjuntos de ejemplos y mucho cómputo.</p></article>
@@ -234,7 +236,7 @@ export function VectorSpaceGraphic() {
     <p>Esta vista aplana muchas dimensiones a dos. Sirve para entender cercanía, no para leer el vector real.</p>
     <div className={[styles['metric-explainer']].filter(Boolean).join(' ')}>
       <div><code>distancia = 0.08</code><p>Es la separación calculada entre el vector de la pregunta y el vector de ese chunk. Se usa para ordenar: dentro del mismo índice, un valor menor indica mayor cercanía semántica.</p></div>
-      <div><code>top_k = 3</code><p><strong>k</strong> es la cantidad que conservamos: después de ordenar por distancia, pasan los 3 chunks más cercanos. No mide calidad ni cambia los vectores.</p></div>
+      <div><code>misma configuración</code><p>La distancia solo se interpreta frente a resultados creados con el mismo modelo de embeddings, métrica e índice.</p></div>
     </div>
     <section className={[styles['cosine-example']].filter(Boolean).join(' ')} aria-labelledby="cosine-example-title">
       <header><div><span>Ejemplo calculado y dibujado</span><strong id="cosine-example-title">Distancia coseno con vectores de 2 dimensiones</strong></div><p>Dos dimensiones nos permiten ver la operación en un plano cartesiano. Un embedding real aplica la misma idea con cientos o miles de coordenadas.</p></header>
@@ -323,7 +325,13 @@ export function ChromaGraphic() {
 
 export function RetrievalGraphic({ topK, onTopK }: { topK: number; onTopK: (value: number) => void }) {
   return <div className={[styles['retrieval-demo']].filter(Boolean).join(' ')}>
-    <div className={[styles['query-vector']].filter(Boolean).join(' ')}><span>Pregunta</span><strong>¿Cómo encuentra RAG información relevante?</strong><code>→ [0.09, −0.22, …]</code></div>
+    <div className={[styles['query-vectorization']].filter(Boolean).join(' ')}>
+      <div><span>1 · Índice ya preparado</span><code>chunk A → [0.12, −0.21, …]</code><code>chunk B → [0.44, 0.08, …]</code></div>
+      <b>La pregunta en texto no se puede comparar directamente con estos vectores.</b>
+      <div><span>2 · Mismo modelo de embeddings</span><strong>¿Cómo encuentra RAG información relevante?</strong><code>→ [0.09, −0.22, …]</code></div>
+      <i>Ahora sí: vector de pregunta ↔ vectores de chunks → distancia coseno</i>
+    </div>
+    <div className={[styles['query-vector']].filter(Boolean).join(' ')}><span>El vector de consulta es temporal</span><strong>Se usa para buscar; no se guarda ni se transforma en la respuesta.</strong></div>
     <div className={[styles['topk-definition']].filter(Boolean).join(' ')}><code>top_k</code><p><strong>top</strong> = los primeros del ranking · <strong>k</strong> = cuántos conservamos</p></div>
     <label>Chunks que pasan al contexto: <strong>top_k = {topK}</strong>
       <input aria-label="Cantidad top k" type="range" min="1" max="4" value={topK} onChange={event => onTopK(Number(event.target.value))} />
@@ -397,11 +405,16 @@ export function EvaluationGraphic() {
       <article><span>02 · generación</span><strong>¿Usó bien la evidencia?</strong><dl><div><dt>Fidelidad</dt><dd>¿Cada afirmación está respaldada por las fuentes?</dd></div><div><dt>Relevancia</dt><dd>¿La respuesta atiende la pregunta sin desviarse?</dd></div><div><dt>Citas</dt><dd>¿Los IDs son válidos y respaldan la frase citada?</dd></div></dl></article>
       <article><span>03 · operación</span><strong>¿Es sostenible?</strong><dl><div><dt>Latencia</dt><dd>Tiempo por extracción, embeddings, búsqueda y generación.</dd></div><div><dt>Tokens y costo</dt><dd>Entrada, salida y llamadas realizadas.</dd></div><div><dt>Actualidad</dt><dd>¿El índice refleja documentos añadidos, cambiados o borrados?</dd></div></dl></article>
     </div>
+    <section className={[styles['metric-example']].filter(Boolean).join(' ')} aria-label="Ejemplo calculado de métricas de recuperación">
+      <header><span>Ejemplo calculado</span><strong>Fuentes relevantes: A y B · top 3 recuperado: A, C y D</strong></header>
+      <div><p><b>Hit@3 = 1</b><span>Apareció al menos una fuente esperada.</span></p><p><b>Recall@3 = 1/2 = 0.50</b><span>Se recuperó una de las dos fuentes relevantes.</span></p><p><b>Precision@3 = 1/3 ≈ 0.33</b><span>Uno de los tres resultados era relevante.</span></p></div>
+    </section>
     <section className={[styles['failure-diagnosis']].filter(Boolean).join(' ')} aria-label="Diagnóstico de fallos del pipeline">
       <header><span>Diagnosticar antes de cambiar</span><strong>¿En qué etapa desapareció la evidencia?</strong></header>
       <div><article><b>La fuente correcta no fue recuperada</b><p>Revisar extracción, chunks, modelo de embeddings, filtros, métrica y <code>top_k</code>.</p></article><span>→</span><article><b>La fuente llegó al contexto, pero la respuesta falló</b><p>Revisar instrucciones, presupuesto de contexto y modelo generador.</p></article><span>→</span><article><b>La respuesta cita un ID desconocido</b><p>Rechazarlo en la validación; no intentar arreglarlo cambiando Chroma.</p></article></div>
     </section>
     <div className={[styles['improvement-loop']].filter(Boolean).join(' ')}><strong>medir</strong><span>→</span><strong>cambiar una variable</strong><span>→</span><strong>repetir los mismos casos</strong><span>→</span><strong>comparar</strong></div>
+    <p className={[styles['privacy-summary']].filter(Boolean).join(' ')}><strong>Privacidad y operación:</strong> con OpenAI salen del equipo los textos necesarios para la operación elegida; con Ollama, embeddings y generación pueden permanecer locales. La API key nunca llega al navegador.</p>
   </div>
 }
 

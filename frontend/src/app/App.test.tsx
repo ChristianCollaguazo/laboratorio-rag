@@ -40,6 +40,17 @@ describe('RAG Lab', () => {
     expect(modelInputs[1]).toHaveValue('gpt-6-luna')
   })
 
+  it('repairs persisted dimensions that exceed the embedding model limit', () => {
+    localStorage.setItem('rag.embedding', JSON.stringify({
+      provider: 'openai', model: 'text-embedding-3-small', dimensions: 1588,
+    }))
+
+    render(<App />)
+
+    expect(screen.getByLabelText(/Dimensiones/)).toHaveValue(1536)
+    expect(screen.getByText(/máx\. 1536/)).toBeInTheDocument()
+  })
+
   it('navigates to the presentation and back with clean URLs', async () => {
     const user = userEvent.setup()
     render(<App />)
@@ -48,7 +59,7 @@ describe('RAG Lab', () => {
     await user.type(title, 'Estado conservado')
     await user.click(screen.getByRole('link', { name: /Aprender RAG/ }))
     expect(window.location.pathname).toBe('/aprender')
-    expect(screen.getByRole('heading', { name: 'RAG: responder con el libro abierto' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'LLM y RAG: responder con evidencia' })).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: '← Volver al laboratorio' }))
     expect(window.location.pathname).toBe('/laboratorio')
     expect(screen.getByRole('heading', { name: 'RAG, pieza por pieza.' })).toBeInTheDocument()

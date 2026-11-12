@@ -1,4 +1,5 @@
 import type { Provider, ProviderConfig, Status } from '../../shared/api/contracts'
+import { embeddingDimensionLimit, normalizeEmbeddingConfig } from '../../shared/embeddingModels'
 import styles from '../laboratory/Laboratory.module.css'
 
 const defaults = {
@@ -12,6 +13,7 @@ function ProviderEditor({ label, value, onChange, purpose }: {
   onChange: (value: ProviderConfig) => void
   purpose: 'generation' | 'embedding'
 }) {
+  const dimensionLimit = purpose === 'embedding' ? embeddingDimensionLimit(value) : null
   const switchProvider = (provider: Provider) => onChange({
     provider,
     model: provider === 'openai'
@@ -26,10 +28,18 @@ function ProviderEditor({ label, value, onChange, purpose }: {
         <button key={provider} type="button" className={value.provider === provider ? styles.active : ''}
           onClick={() => switchProvider(provider)}>{provider === 'openai' ? 'OpenAI' : 'Ollama'}</button>)}
     </div>
-    <label>Modelo<input value={value.model} onChange={event => onChange({ ...value, model: event.target.value })} /></label>
-    {purpose === 'embedding' && <label>Dimensiones <span className={[styles['optional']].filter(Boolean).join(' ')}>(vacío = modelo)</span>
-      <input type="number" min="1" value={value.dimensions ?? ''}
-        onChange={event => onChange({ ...value, dimensions: event.target.value ? Number(event.target.value) : null })} />
+    <label>Modelo<input value={value.model} onChange={event => {
+      const next = { ...value, model: event.target.value }
+      onChange(purpose === 'embedding' ? normalizeEmbeddingConfig(next) : next)
+    }} /></label>
+    {purpose === 'embedding' && <label>Dimensiones <span className={[styles['optional']].filter(Boolean).join(' ')}>
+      ({dimensionLimit ? `máx. ${dimensionLimit}; ` : ''}vacío = modelo)
+    </span>
+      <input type="number" min="1" max={dimensionLimit ?? undefined} value={value.dimensions ?? ''}
+        onChange={event => onChange(normalizeEmbeddingConfig({
+          ...value,
+          dimensions: event.target.value ? Number(event.target.value) : null,
+        }))} />
     </label>}
   </fieldset>
 }
