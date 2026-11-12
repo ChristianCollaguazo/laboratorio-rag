@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 from app.features.documents.schemas import ChunkingConfig
 from app.providers.schemas import ProviderConfig
 
-from .models import IndexRecord
+from .models import IndexRecord, IndexTraceability
 
 
 class IndexRequest(BaseModel):
@@ -44,4 +44,34 @@ class IndexView(BaseModel):
             chunk_count=index.chunk_count,
             embedding_sample=index.embedding_sample,
             created_at=index.created_at,
+        )
+
+
+class VectorTraceRecordView(BaseModel):
+    chunk_id: str
+    document_id: str
+    document_title: str
+    page: int
+    position: int
+    embedding_sample: list[float]
+
+
+class IndexTraceabilityView(BaseModel):
+    index_id: str
+    collection_name: str
+    collection_metadata: dict[str, str | int | float]
+    record_count: int
+    records: list[VectorTraceRecordView]
+
+    @classmethod
+    def from_domain(cls, traceability: IndexTraceability) -> "IndexTraceabilityView":
+        return cls(
+            index_id=traceability.index_id,
+            collection_name=traceability.collection_name,
+            collection_metadata=traceability.collection_metadata,
+            record_count=traceability.record_count,
+            records=[
+                VectorTraceRecordView.model_validate(record, from_attributes=True)
+                for record in traceability.records
+            ],
         )

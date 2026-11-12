@@ -10,7 +10,7 @@ Una aplicación para observar y aprender un flujo RAG completo sin esconderlo de
 - Chroma persistente, ejecutado dentro del proceso local; no hay servicio administrado.
 - Texto pegado, TXT UTF-8 y PDF con texto seleccionable. No hay OCR.
 - Proveedores de embeddings y generación configurables por separado.
-- Vista del texto, chunks, muestra vectorial, resultados, distancias, payload exacto enviado al LLM, respuesta, citas y tokens.
+- Vista del texto, chunks, muestra vectorial, metadatos y trazabilidad SQLite/Chroma, resultados, distancias, payload exacto enviado al LLM, respuesta, citas y tokens.
 - Presentación independiente **Aprender RAG** con nueve secciones jerárquicas, diagramas, simulaciones locales y un laboratorio opcional de embeddings reales.
 - Sin autenticación, Docker, almacenamiento cloud ni fallback automático entre proveedores.
 
@@ -262,6 +262,12 @@ derecha. Cuando agregas un documento, los índices anteriores no cambian: crea u
 **Vaciar datos locales** elimina todos los documentos, chunks, índices y vectores
 de SQLite y Chroma después de una confirmación. Conserva los archivos vacíos de
 las bases y tus preferencias de proveedor guardadas en el navegador.
+
+La pestaña **Trazabilidad** muestra el manifiesto de la colección Chroma y la
+relación `documento SQLite → chunk → vector Chroma`. Por seguridad visual solo
+enseña una muestra corta de cada embedding, no miles de dimensiones completas.
+En la respuesta, el selector de citas permite alternar entre el ID técnico del
+chunk y el título del documento; ambos enlaces llevan a su evidencia fuente.
 
 Las distancias coseno son medidas de separación, no probabilidades. Un valor menor suele indicar mayor cercanía para este índice, pero no representa un porcentaje de certeza.
 

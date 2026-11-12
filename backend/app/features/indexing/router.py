@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.core.container import ApplicationContainer, get_container
 
-from .schemas import IndexRequest, IndexView
+from .schemas import IndexRequest, IndexTraceabilityView, IndexView
 
 router = APIRouter(prefix="/indices", tags=["indexing"])
 
@@ -17,6 +17,11 @@ def create_index(request: IndexRequest, container: Annotated[ApplicationContaine
 @router.get("", response_model=list[IndexView])
 def list_indices(container: Annotated[ApplicationContainer, Depends(get_container)]) -> list[IndexView]:
     return [IndexView.from_domain(item) for item in container.indexing.list_indices()]
+
+
+@router.get("/{index_id}/traceability", response_model=IndexTraceabilityView)
+def inspect_index(index_id: str, container: Annotated[ApplicationContainer, Depends(get_container)]) -> IndexTraceabilityView:
+    return IndexTraceabilityView.from_domain(container.indexing.inspect_index(index_id))
 
 
 @router.delete("/{index_id}", status_code=status.HTTP_204_NO_CONTENT)

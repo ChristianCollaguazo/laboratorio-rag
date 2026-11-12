@@ -187,6 +187,17 @@ describe('RAG Lab', () => {
     expect(await screen.findByText('Documento fuente · SQLite')).toBeInTheDocument()
     expect(screen.getByText('Ecuador')).toBeInTheDocument()
 
+    await user.click(screen.getByRole('button', { name: 'respuesta' }))
+    await user.click(screen.getByRole('button', { name: 'Título del documento' }))
+    await user.click(screen.getAllByRole('button', { name: 'Ecuador' })[0])
+    expect(screen.getByText('Documento fuente · SQLite')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'respuesta' }))
+    await user.click(screen.getByRole('button', { name: 'ID del chunk' }))
+    await user.click(screen.getAllByRole('button', { name: 'doc_ecuador:p1:c000' })[0])
+    expect(screen.getByText('Quito es la capital del Ecuador.')).toBeInTheDocument()
+    expect(screen.queryByText('Documento fuente · SQLite')).not.toBeInTheDocument()
+
     await user.click(screen.getByRole('button', { name: 'envío LLM' }))
 
     expect(screen.getByText('✓ Enviado')).toBeInTheDocument()

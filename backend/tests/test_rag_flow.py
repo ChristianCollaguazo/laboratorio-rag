@@ -91,7 +91,12 @@ def test_builds_one_shared_index_for_multiple_existing_documents(services):
     second_chunks = documents.create_chunks(second.id, ChunkingOptions(100, 20))
 
     index = indexing.create_index([first_chunks.id, second_chunks.id], embedding)
+    traceability = indexing.inspect_index(index.id)
 
     assert index.document_ids == sorted([first.id, second.id])
     assert index.chunk_count == len(first_chunks.chunks) + len(second_chunks.chunks)
     assert services["vector_store"].client.get_collection(index.collection_name).count() == index.chunk_count
+    assert traceability.collection_metadata["model"] == "fake"
+    assert traceability.record_count == index.chunk_count
+    assert {record.document_id for record in traceability.records} == {first.id, second.id}
+    assert all(len(record.embedding_sample) == 8 for record in traceability.records)

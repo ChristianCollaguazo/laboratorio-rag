@@ -51,6 +51,23 @@ export interface IndexView {
   created_at: string
 }
 
+export interface VectorTraceRecord {
+  chunk_id: string
+  document_id: string
+  document_title: string
+  page: number
+  position: number
+  embedding_sample: number[]
+}
+
+export interface IndexTraceability {
+  index_id: string
+  collection_name: string
+  collection_metadata: Record<string, string | number>
+  record_count: number
+  records: VectorTraceRecord[]
+}
+
 export interface Retrieval {
   chunks: Required<Chunk>[]
   question: string

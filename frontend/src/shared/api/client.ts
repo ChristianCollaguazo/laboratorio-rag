@@ -1,4 +1,4 @@
-import type { ChatResult, ChunkSet, DocumentView, EmbeddingLabResult, IndexView, ProviderConfig, Retrieval, Status } from './contracts'
+import type { ChatResult, ChunkSet, DocumentView, EmbeddingLabResult, IndexTraceability, IndexView, ProviderConfig, Retrieval, Status } from './contracts'
 
 function formatErrorDetail(detail: unknown, fallback: string): string {
   if (typeof detail === 'string') return detail
@@ -60,6 +60,7 @@ export const api = {
       chunk_set_ids: Array.isArray(chunkSetIds) ? chunkSetIds : [chunkSetIds],
       embedding,
     })),
+  indexTraceability: (indexId: string) => request<IndexTraceability>(`/api/v1/indices/${indexId}/traceability`),
   retrieve: (indexId: string, question: string, topK: number, embedding: ProviderConfig) =>
     request<Retrieval>('/api/v1/retrieve', json({ index_id: indexId, question, top_k: topK, embedding })),
   chat: (indexId: string, question: string, topK: number, embedding: ProviderConfig, generation: ProviderConfig) =>

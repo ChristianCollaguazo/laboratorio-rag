@@ -17,7 +17,7 @@ from app.providers.models import ProviderSpec
 from app.providers.ports import ProviderRegistry
 
 from .fingerprint import build_fingerprint
-from .models import IndexRecord
+from .models import IndexRecord, IndexTraceability
 
 
 @dataclass
@@ -103,6 +103,21 @@ class IndexingService:
     def get_index(self, index_id: str) -> IndexRecord | None:
         item = self.repository.get(index_id)
         return IndexRecord.from_record(item) if item else None
+
+    def inspect_index(self, index_id: str) -> IndexTraceability:
+        index = self.get_index(index_id)
+        if not index:
+            raise ResourceNotFoundError("Índice no encontrado.")
+        metadata, record_count, records = self.vector_store.inspect_collection(
+            index.collection_name
+        )
+        return IndexTraceability(
+            index_id=index.id,
+            collection_name=index.collection_name,
+            collection_metadata=metadata,
+            record_count=record_count,
+            records=records,
+        )
 
     @staticmethod
     def assert_compatible(index: IndexRecord, embedding: ProviderSpec) -> None:

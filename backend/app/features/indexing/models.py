@@ -4,6 +4,25 @@ from app.providers.models import ProviderSpec
 
 
 @dataclass(frozen=True)
+class VectorTraceRecord:
+    chunk_id: str
+    document_id: str
+    document_title: str
+    page: int
+    position: int
+    embedding_sample: list[float]
+
+
+@dataclass(frozen=True)
+class IndexTraceability:
+    index_id: str
+    collection_name: str
+    collection_metadata: dict[str, str | int | float]
+    record_count: int
+    records: list[VectorTraceRecord]
+
+
+@dataclass(frozen=True)
 class IndexRecord:
     id: str
     collection_name: str

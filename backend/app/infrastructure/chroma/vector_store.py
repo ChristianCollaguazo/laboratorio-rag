@@ -7,6 +7,7 @@ from langchain_core.documents import Document as LangChainDocument
 from langchain_core.embeddings import Embeddings
 
 from app.features.documents.models import Chunk
+from app.features.indexing.models import VectorTraceRecord
 
 
 @dataclass(frozen=True)
@@ -100,3 +101,30 @@ class ChromaVectorStore:
         for collection in collections:
             name = collection.name if hasattr(collection, "name") else str(collection)
             self.delete_collection(name, ignore_missing=True)
+
+    def inspect_collection(
+        self, collection_name: str, limit: int = 100
+    ) -> tuple[dict[str, str | int | float], int, list[VectorTraceRecord]]:
+        collection = self.client.get_collection(collection_name)
+        result = collection.get(include=["metadatas", "embeddings"], limit=limit)
+        metadata = {
+            str(key): value
+            for key, value in (collection.metadata or {}).items()
+            if isinstance(value, (str, int, float))
+        }
+        records = []
+        for chunk_id, item_metadata, embedding in zip(
+            result["ids"], result["metadatas"], result["embeddings"], strict=True
+        ):
+            vector = embedding.tolist() if hasattr(embedding, "tolist") else embedding
+            records.append(
+                VectorTraceRecord(
+                    chunk_id=str(chunk_id),
+                    document_id=str(item_metadata["document_id"]),
+                    document_title=str(item_metadata["document_title"]),
+                    page=int(item_metadata["page"]),
+                    position=int(item_metadata["position"]),
+                    embedding_sample=[float(value) for value in vector[:8]],
+                )
+            )
+        return metadata, collection.count(), records

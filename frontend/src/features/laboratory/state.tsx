@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useReducer, type Dispatch, type R
 import type { ChatResult, ChunkSet, DocumentView, IndexView, ProviderConfig, Retrieval } from '../../shared/api/contracts'
 import { normalizeEmbeddingConfig } from '../../shared/embeddingModels'
 
-export type LaboratoryTab = 'texto' | 'chunks' | 'embedding' | 'recuperacion' | 'envio' | 'respuesta'
+export type LaboratoryTab = 'texto' | 'chunks' | 'embedding' | 'trazabilidad' | 'recuperacion' | 'envio' | 'respuesta'
 
 export interface LaboratoryState {
   document: DocumentView | null
