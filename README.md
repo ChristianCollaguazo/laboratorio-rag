@@ -254,6 +254,11 @@ Para una primera comprobación utiliza `examples/ecuador.txt` y pregunta **“¿
 
 El botón **Aprender RAG** abre `/aprender`, una vista didáctica separada del laboratorio. Explica documento, chunks, embeddings, comparación de vectores, recuperación del texto por ID, Chroma, recuperación, contexto, system prompt, generación token por token, validación de citas y evaluación del sistema mediante un mismo caso técnico.
 
+El contenido narrativo completo está disponible en
+[`docs/rag-learning-presentation.md`](docs/rag-learning-presentation.md). El
+archivo es autocontenido y está preparado para utilizarse como fuente en
+NotebookLM al crear un resumen de audio, una presentación o un video educativo.
+
 La presentación incluye un artículo completo editable para observar cómo cualquier cambio vuelve a dividir el texto, controles locales para comparar tamaños y solapamientos de chunks y una simulación de cómo `top_k` modifica las fuentes del contexto. Todo funciona localmente y sin credenciales salvo la diapositiva **Laboratorio**, que llama a OpenAI únicamente después de pulsar **Generar embeddings reales**. FastAPI envía las palabras, calcula las distancias y devuelve el texto asociado al ID del vecino más cercano; la API key nunca llega al navegador. El laboratorio no guarda datos en Chroma ni modifica documentos o índices persistidos. Usa **Anterior/Siguiente**, el índice lateral o las teclas `←`, `→`, `Home` y `End`; **Volver al laboratorio** conserva el estado de trabajo actual.
 
 ## Compatibilidad de índices
