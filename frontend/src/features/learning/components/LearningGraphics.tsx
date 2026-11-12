@@ -172,24 +172,36 @@ export function EmbeddingGraphic() {
   </div>
 }
 
-export function EmbeddingLabGraphic({ query, candidatesText, result, busy, error, onQuery, onCandidates, onRun }: {
+export function EmbeddingLabGraphic({ model, query, candidatesText, result, busy, error, onModel, onQuery, onCandidates, onRun }: {
+  model: string
   query: string
   candidatesText: string
   result: EmbeddingLabResult | null
   busy: boolean
   error: string
+  onModel: (value: string) => void
   onQuery: (value: string) => void
   onCandidates: (value: string) => void
   onRun: (event: React.FormEvent) => void
 }) {
   return <div className={[styles['embedding-lab']].filter(Boolean).join(' ')}>
     <form onSubmit={onRun}>
-      <div className={[styles['lab-fields']].filter(Boolean).join(' ')}><label>Palabra consultada<input aria-label="Palabra consultada" value={query} maxLength={200} onChange={event => onQuery(event.target.value)} /></label>
-        <label>Palabras guardadas <span>una por línea</span><textarea aria-label="Palabras candidatas" rows={3} value={candidatesText} onChange={event => onCandidates(event.target.value)} /></label></div>
-      <div className={[styles['openai-lab-warning']].filter(Boolean).join(' ')}><span>↗ OpenAI</span><p>Al ejecutar, estas palabras salen de este Mac hacia OpenAI. La API key permanece en FastAPI.</p><button className={styles.primary} disabled={busy} type="submit">{busy ? 'Generando…' : 'Generar embeddings reales'}</button></div>
+      <section className={[styles['lab-model']].filter(Boolean).join(' ')} aria-label="Configuración del modelo de embeddings">
+        <div className={[styles['lab-model-copy']].filter(Boolean).join(' ')}><span>comparación multilingüe</span><strong>Elige el modelo de embeddings</strong><p>Usa el mismo modelo para representar y comparar los textos en español e inglés.</p></div>
+        <label className={[styles['model-picker']].filter(Boolean).join(' ')}>Modelo OpenAI
+          <span className={[styles['select-shell']].filter(Boolean).join(' ')}><select aria-label="Modelo de embeddings" value={model} onChange={event => onModel(event.target.value)}>
+            <option value="text-embedding-3-small">text-embedding-3-small</option>
+            <option value="text-embedding-3-large">text-embedding-3-large</option>
+          </select></span>
+          <small>{model === 'text-embedding-3-large' ? '3072 dimensiones · mayor calidad y costo' : '1536 dimensiones · rápido y económico'}</small>
+        </label>
+      </section>
+      <div className={[styles['lab-fields']].filter(Boolean).join(' ')}><label>Texto consultado<input aria-label="Texto consultado" value={query} maxLength={200} onChange={event => onQuery(event.target.value)} /></label>
+        <label>Textos guardados <span>uno por línea</span><textarea aria-label="Textos candidatos" rows={5} value={candidatesText} onChange={event => onCandidates(event.target.value)} /></label></div>
+      <div className={[styles['openai-lab-warning']].filter(Boolean).join(' ')}><span>↗ OpenAI</span><p>Al ejecutar, estos textos salen de este Mac hacia OpenAI. La API key permanece en FastAPI.</p><button className={styles.primary} disabled={busy} type="submit">{busy ? 'Generando…' : 'Generar embeddings reales'}</button></div>
     </form>
     {error && <div className={[styles['lab-error']].filter(Boolean).join(' ')} role="alert">{error}</div>}
-    {!result && !error && <div className={[styles['lab-placeholder']].filter(Boolean).join(' ')}><strong>Lo que observarás</strong><ol><li>OpenAI convierte cada palabra en un vector.</li><li>FastAPI calcula la distancia coseno.</li><li>El vector más cercano aporta un ID.</li><li>El ID permite recuperar el texto original guardado.</li></ol></div>}
+    {!result && !error && <div className={[styles['lab-placeholder']].filter(Boolean).join(' ')}><strong>Lo que observarás</strong><ol><li>OpenAI convierte cada texto en un vector.</li><li>FastAPI calcula la distancia coseno.</li><li>El vector más cercano aporta un ID.</li><li>El ID permite recuperar el texto original guardado.</li></ol></div>}
     {result && <div className={[styles['lab-result']].filter(Boolean).join(' ')} aria-live="polite">
       <header><div><span>Consulta → vector de {result.dimension} dimensiones</span><strong>{result.query.text}</strong></div><div className={[styles['lab-vector']].filter(Boolean).join(' ')}>[{result.query.embedding_sample.map(value => value.toFixed(4)).join(', ')}, …]</div></header>
       <div className={[styles['distance-ranking']].filter(Boolean).join(' ')}><div className={[styles['ranking-title']].filter(Boolean).join(' ')}><strong>Distancias calculadas</strong><span>menor = más cercano</span></div>{result.candidates.map(item => <article className={item.rank === 1 ? styles.nearest : ''} key={item.id}>

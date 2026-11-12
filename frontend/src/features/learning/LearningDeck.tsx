@@ -11,8 +11,9 @@ export default function LearningDeck({ onBack }: { onBack: () => void }) {
   const [overlap, setOverlap] = useState(60)
   const [topK, setTopK] = useState(2)
   const [articleText, setArticleText] = useState(learningArticle)
-  const [labQuery, setLabQuery] = useState('automóvil')
-  const [labCandidates, setLabCandidates] = useState('coche\nbanana\nvehículo')
+  const [labQuery, setLabQuery] = useState('Abrí una lata de atún para preparar la comida.')
+  const [labCandidates, setLabCandidates] = useState('I opened a can of tuna to prepare the meal.\nGuardé la comida en un recipiente.\nUtilicé una cuchara para comer.\nEl automóvil está en el garaje.')
+  const [labModel, setLabModel] = useState('text-embedding-3-small')
   const [labResult, setLabResult] = useState<EmbeddingLabResult | null>(null)
   const [labBusy, setLabBusy] = useState(false)
   const [labError, setLabError] = useState('')
@@ -25,13 +26,14 @@ export default function LearningDeck({ onBack }: { onBack: () => void }) {
     event.preventDefault()
     const candidates = labCandidates.split(/\n|,/).map(item => item.trim()).filter(Boolean)
     if (!labQuery.trim() || candidates.length < 2 || candidates.length > 6) {
-      setLabError('Escribe una consulta y entre 2 y 6 palabras candidatas.')
+      setLabError('Escribe una consulta y entre 2 y 6 textos candidatos.')
       return
     }
     setLabBusy(true)
     setLabError('')
     try {
-      setLabResult(await api.learningEmbeddings(labQuery.trim(), candidates))
+      const dimensions = labModel === 'text-embedding-3-large' ? 3072 : 1536
+      setLabResult(await api.learningEmbeddings(labQuery.trim(), candidates, labModel, dimensions))
     } catch (error) {
       setLabResult(null)
       setLabError(error instanceof Error ? error.message : 'No se pudieron generar los embeddings.')
@@ -60,9 +62,10 @@ export default function LearningDeck({ onBack }: { onBack: () => void }) {
 
   const CurrentSlide = slideRegistry[current].component
   const slideProps = {
-    chunks, chunkSize, overlap, topK, articleText, labQuery, labCandidates,
+    chunks, chunkSize, overlap, topK, articleText, labQuery, labCandidates, labModel,
     labResult, labBusy, labError, setChunkSize, setOverlap, setTopK, setArticleText,
     resetArticle: () => setArticleText(learningArticle), setLabQuery, setLabCandidates,
+    setLabModel: (model: string) => { setLabModel(model); setLabResult(null); setLabError('') },
     runEmbeddingLab,
   }
 

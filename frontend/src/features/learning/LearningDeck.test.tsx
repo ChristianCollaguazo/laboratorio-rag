@@ -69,31 +69,41 @@ describe('Learning deck', () => {
   it('uses the backend for real embeddings and explains ID-based text recovery', async () => {
     const user = userEvent.setup()
     const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({
-      model: 'text-embedding-3-small', dimension: 1536,
-      query: { id: 'query', text: 'automóvil', embedding_sample: [0.1, -0.2, 0.3] },
+      model: 'text-embedding-3-large', dimension: 3072,
+      query: { id: 'query', text: 'Abrí una lata de atún para preparar la comida.', embedding_sample: [0.1, -0.2, 0.3] },
       candidates: [
-        { id: 'word_001', text: 'coche', embedding_sample: [0.11, -0.19], distance: 0.08, rank: 1 },
-        { id: 'word_003', text: 'vehículo', embedding_sample: [0.09, -0.17], distance: 0.12, rank: 2 },
-        { id: 'word_002', text: 'banana', embedding_sample: [-0.4, 0.5], distance: 0.71, rank: 3 },
+        { id: 'word_001', text: 'I opened a can of tuna to prepare the meal.', embedding_sample: [0.11, -0.19], distance: 0.08, rank: 1 },
+        { id: 'word_002', text: 'Guardé la comida en un recipiente.', embedding_sample: [0.09, -0.17], distance: 0.22, rank: 2 },
+        { id: 'word_003', text: 'Utilicé una cuchara para comer.', embedding_sample: [-0.4, 0.5], distance: 0.71, rank: 3 },
+        { id: 'word_004', text: 'El automóvil está en el garaje.', embedding_sample: [-0.6, 0.4], distance: 0.83, rank: 4 },
       ],
-      recovered: { id: 'word_001', text: 'coche', embedding_sample: [0.11, -0.19], distance: 0.08, rank: 1 },
-      usage: { prompt_tokens: 6, total_tokens: 6 },
+      recovered: { id: 'word_001', text: 'I opened a can of tuna to prepare the meal.', embedding_sample: [0.11, -0.19], distance: 0.08, rank: 1 },
+      usage: { prompt_tokens: 30, total_tokens: 30 },
     }), { status: 200, headers: { 'Content-Type': 'application/json' } }))
     vi.stubGlobal('fetch', fetchMock)
 
     render(<LearningDeck onBack={vi.fn()} />)
     await user.click(screen.getByRole('button', { name: '05 Laboratorio' }))
+    expect(screen.getByLabelText('Texto consultado')).toHaveValue('Abrí una lata de atún para preparar la comida.')
+    expect((screen.getByLabelText('Textos candidatos') as HTMLTextAreaElement).value).toContain('I opened a can of tuna')
     expect(screen.getByText(/La API key permanece en FastAPI/)).toBeInTheDocument()
+    await user.selectOptions(screen.getByLabelText('Modelo de embeddings'), 'text-embedding-3-large')
     await user.click(screen.getByRole('button', { name: 'Generar embeddings reales' }))
 
-    expect(await screen.findByText('“coche”')).toBeInTheDocument()
+    expect(await screen.findByText('“I opened a can of tuna to prepare the meal.”')).toBeInTheDocument()
     expect(screen.getByText('El vector no se convirtió en texto.')).toBeInTheDocument()
-    expect(screen.getByText('6 tokens de entrada')).toBeInTheDocument()
+    expect(screen.getByText('30 tokens de entrada')).toBeInTheDocument()
     expect(fetchMock).toHaveBeenCalledWith('/api/v1/learning/embeddings', expect.objectContaining({ method: 'POST' }))
     const request = JSON.parse(fetchMock.mock.calls[0][1].body)
     expect(request).toEqual(expect.objectContaining({
-      query: 'automóvil', candidates: ['coche', 'banana', 'vehículo'],
-      model: 'text-embedding-3-small', dimensions: 1536,
+      query: 'Abrí una lata de atún para preparar la comida.',
+      candidates: [
+        'I opened a can of tuna to prepare the meal.',
+        'Guardé la comida en un recipiente.',
+        'Utilicé una cuchara para comer.',
+        'El automóvil está en el garaje.',
+      ],
+      model: 'text-embedding-3-large', dimensions: 3072,
     }))
     vi.unstubAllGlobals()
   })

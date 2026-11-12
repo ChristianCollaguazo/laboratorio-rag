@@ -182,8 +182,19 @@
 .training-vs-inference strong { font-size: 11px; }.training-vs-inference p { margin: 0; font-size: 9px; line-height: 1.5; }
 
 /* 05 · Live embedding laboratory */
-.embedding-lab { display: grid; gap: 13px; }
+.embedding-lab { container-type: inline-size; display: grid; gap: 13px; }
 .embedding-lab form { display: grid; gap: 10px; }
+.lab-model { display: grid; grid-template-columns: minmax(0, 1fr) minmax(270px, .8fr); gap: 24px; align-items: center; margin: 0; padding: 16px 18px; color: var(--ink); background: #eaf5ed; border: 1px solid var(--forest); }
+.lab-model-copy { display: grid; gap: 5px; }
+.lab-model-copy > span { color: var(--forest); font-family: 'DM Mono'; font-size: 8px; letter-spacing: .08em; text-transform: uppercase; }
+.lab-model-copy > strong { font-size: 14px; }
+.lab-model-copy > p { max-width: 520px; margin: 0; color: var(--muted); font-size: 9px; line-height: 1.5; }
+.model-picker { min-width: 0; margin: 0; font-size: 9px; }
+.select-shell { position: relative; display: block; margin-top: 5px; }
+.select-shell::after { content: ''; position: absolute; top: 50%; right: 13px; width: 7px; height: 7px; border-right: 1.5px solid var(--forest); border-bottom: 1.5px solid var(--forest); transform: translateY(-70%) rotate(45deg); pointer-events: none; }
+.select-shell select { width: 100%; min-height: 38px; padding: 8px 38px 8px 11px; appearance: none; color: var(--ink); background: white; border: 1px solid #9eaaa2; border-radius: 0; outline: none; font-family: 'DM Mono'; font-size: 10px; cursor: pointer; }
+.select-shell select:focus-visible { border-color: var(--forest); box-shadow: 0 0 0 2px #194f3b20; }
+.model-picker > small { margin-top: 5px; color: var(--muted); font-size: 8px; font-weight: 400; }
 .lab-fields { display: grid; grid-template-columns: .75fr 1.25fr; gap: 10px; }
 .lab-fields label { margin: 0; padding: 12px; color: var(--ink); background: white; border: 1px solid var(--line); }
 .lab-fields label > span { justify-self: end; color: var(--muted); font-size: 8px; font-weight: 400; }
@@ -207,6 +218,12 @@
 .reverse-explanation div { display: grid; gap: 4px; }.reverse-explanation span { color: #aebbb4; font-size: 7px; text-transform: uppercase; }.reverse-explanation code { color: var(--mint); font-size: 9px; }.reverse-explanation b { color: var(--orange); font-size: 8px; }.reverse-explanation strong { color: var(--mint); font-size: 11px; }
 .not-decoded { display: flex; gap: 10px; padding: 10px 12px; background: #fff0d9; border: 1px solid #e6c696; font-size: 8px; line-height: 1.45; }.not-decoded strong { flex: 0 0 auto; color: #9b4c28; }.not-decoded span { color: #704a37; }
 .lab-result > footer { display: flex; justify-content: space-between; color: var(--muted); font-family: 'DM Mono'; font-size: 7px; }
+
+@container (max-width: 560px) {
+  .lab-model { grid-template-columns: 1fr; gap: 12px; }
+  .lab-fields, .lab-result > header { grid-template-columns: 1fr; }
+  .openai-lab-warning { grid-template-columns: 1fr; }
+}
 
 /* 06 · Vectors */
 .vector-space { height: 100%; display: grid; align-content: center; }
@@ -453,6 +470,9 @@
 .training-vs-inference strong { font-size: 14px; }.training-vs-inference p { font-size: 12px; }
 
 .lab-fields label { font-size: 13px; }.lab-fields label > span { font-size: 10px; }
+.lab-model-copy > span, .model-picker, .model-picker > small { font-size: 10px; }
+.lab-model-copy > strong { font-size: 16px; }.lab-model-copy > p { font-size: 11px; }
+.select-shell select { font-size: 12px; }
 .lab-fields input, .lab-fields textarea { font-size: 13px; }
 .openai-lab-warning > span { font-size: 11px; }.openai-lab-warning p { font-size: 11px; }.openai-lab-warning button { font-size: 11px; }
 .lab-error { font-size: 12px; }
@@ -560,6 +580,7 @@
   .training-examples, .training-vs-inference { grid-template-columns: 1fr; }
   .training-steps { grid-template-columns: 1fr 1fr; }
   .training-loop { grid-template-columns: 1fr; }
+  .lab-model { grid-template-columns: 1fr; gap: 14px; }
   .lab-fields, .lab-result > header { grid-template-columns: 1fr; }
   .openai-lab-warning { grid-template-columns: 1fr; }
   .lab-placeholder ol { grid-template-columns: 1fr 1fr; }

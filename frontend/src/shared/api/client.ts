@@ -39,9 +39,9 @@ export const api = {
     request<Retrieval>('/api/v1/retrieve', json({ index_id: indexId, question, top_k: topK, embedding })),
   chat: (indexId: string, question: string, topK: number, embedding: ProviderConfig, generation: ProviderConfig) =>
     request<ChatResult>('/api/v1/chat', json({ index_id: indexId, question, top_k: topK, embedding, generation })),
-  learningEmbeddings: (query: string, candidates: string[]) =>
+  learningEmbeddings: (query: string, candidates: string[], model: string, dimensions: number) =>
     request<EmbeddingLabResult>('/api/v1/learning/embeddings', json({
-      query, candidates, model: 'text-embedding-3-small', dimensions: 1536,
+      query, candidates, model, dimensions,
     })),
   deleteDocument: (id: string) => request<void>(`/api/v1/documents/${id}`, { method: 'DELETE' }),
   deleteIndex: (id: string) => request<void>(`/api/v1/indices/${id}`, { method: 'DELETE' }),

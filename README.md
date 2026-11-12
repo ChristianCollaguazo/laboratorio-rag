@@ -259,7 +259,7 @@ El contenido narrativo completo está disponible en
 archivo es autocontenido y está preparado para utilizarse como fuente en
 NotebookLM al crear un resumen de audio, una presentación o un video educativo.
 
-La presentación incluye un artículo completo editable para observar cómo cualquier cambio vuelve a dividir el texto, controles locales para comparar tamaños y solapamientos de chunks y una simulación de cómo `top_k` modifica las fuentes del contexto. Todo funciona localmente y sin credenciales salvo la diapositiva **Laboratorio**, que llama a OpenAI únicamente después de pulsar **Generar embeddings reales**. FastAPI envía las palabras, calcula las distancias y devuelve el texto asociado al ID del vecino más cercano; la API key nunca llega al navegador. El laboratorio no guarda datos en Chroma ni modifica documentos o índices persistidos. Usa **Anterior/Siguiente**, el índice lateral o las teclas `←`, `→`, `Home` y `End`; **Volver al laboratorio** conserva el estado de trabajo actual.
+La presentación incluye un artículo completo editable para observar cómo cualquier cambio vuelve a dividir el texto, controles locales para comparar tamaños y solapamientos de chunks y una simulación de cómo `top_k` modifica las fuentes del contexto. Todo funciona localmente y sin credenciales salvo la diapositiva **Laboratorio**, que llama a OpenAI únicamente después de pulsar **Generar embeddings reales**. Su ejemplo inicial compara una oración en español con candidatos en español e inglés y permite elegir entre `text-embedding-3-small` y `text-embedding-3-large`. FastAPI envía los textos con el modelo seleccionado, calcula las distancias y devuelve el texto asociado al ID del vecino más cercano; la API key nunca llega al navegador. El laboratorio no guarda datos en Chroma ni modifica documentos o índices persistidos. Usa **Anterior/Siguiente**, el índice lateral o las teclas `←`, `→`, `Home` y `End`; **Volver al laboratorio** conserva el estado de trabajo actual.
 
 ## Compatibilidad de índices
 
@@ -289,7 +289,7 @@ Esto reduce riesgos de prompt injection, pero no constituye una defensa completa
 - `data/chroma/` guarda las colecciones vectoriales persistentes, incluidos los embeddings completos y los datos asociados que Chroma utiliza durante la recuperación.
 - Ambos destinos y los uploads están ignorados por Git.
 - Los botones de borrado de la interfaz eliminan documentos o índices de manera coordinada.
-- El laboratorio didáctico de palabras y embeddings no persiste sus vectores en SQLite ni Chroma.
+- El laboratorio didáctico de textos y embeddings no persiste sus vectores en SQLite ni Chroma.
 
 Para reiniciar completamente la POC, detén el backend y elimina el contenido generado dentro de `data/`, conservando `data/.gitkeep`. Si los datos importan, copia primero toda la carpeta `data/` como respaldo.
 

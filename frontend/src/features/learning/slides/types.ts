@@ -10,6 +10,7 @@ export interface LearningSlideProps {
   articleText: string
   labQuery: string
   labCandidates: string
+  labModel: string
   labResult: EmbeddingLabResult | null
   labBusy: boolean
   labError: string
@@ -20,5 +21,6 @@ export interface LearningSlideProps {
   resetArticle: () => void
   setLabQuery: (value: string) => void
   setLabCandidates: (value: string) => void
+  setLabModel: (value: string) => void
   runEmbeddingLab: (event: FormEvent) => void
 }
